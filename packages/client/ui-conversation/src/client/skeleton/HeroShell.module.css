@@ -23,24 +23,26 @@
   overflow: visible;
 }
 
-/* figma 34:10411: fish + title, gap 10, centered; 26/32 wt500. The preview
-   badge is a product addition outside that source: a mono superscript pill
-   riding the title's top-right. */
+/* The design language's heading-lg rung: 40/600 with tight leading and -1px
+   tracking, the display step the reference uses for its sub-page headlines.
+   The preview badge is a product addition outside that source: a superscript
+   pill riding the title's top-right. */
 .headline {
   display: flex;
   /* Overflow-driven: the fish and the title group are two wrap units sharing
      one centered line while they fit; squeezed, the fish takes its own line
      above the group. No breakpoint. */
   flex-wrap: wrap;
-  column-gap: 10px;
-  /* Wrapped, the fish sits on its own line; more air than the 10px side gap
+  column-gap: 12px;
+  /* Wrapped, the fish sits on its own line; more air than the 12px side gap
      keeps it reading as a mark above the title, not a squeezed inline glyph. */
-  row-gap: 12px;
+  row-gap: 16px;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
-  line-height: 32px;
-  font-weight: 500;
+  font-size: 40px;
+  line-height: 48px;
+  font-weight: 600;
+  letter-spacing: -1px;
   color: var(--dsw-alias-label-primary);
 }
 
@@ -59,18 +61,21 @@
   min-width: 0;
 }
 
+/* badge-beta chrome: the reference's informational pill — pale blue fill,
+   deep blue label, full-round corners (every badge in the language is a pill). */
 .previewBadge {
   align-self: flex-start;
-  margin-top: 2px;
-  padding: 1px 7px 0;
-  border: 0.5px solid var(--dsw-alias-interactive-bg-hover);
-  border-radius: 24px;
+  margin-top: 6px;
+  padding: 2px 9px 0;
+  border: none;
+  border-radius: 999px;
+  corner-shape: round;
   background: var(--dsw-alias-state-business-tertiary);
   color: var(--dsw-alias-label-primary-bluish);
   font-family: var(--ds-font-family-code);
   font-size: 12px;
-  line-height: 18px;
-  font-weight: 500;
+  line-height: 20px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -193,16 +198,16 @@
   color: var(--dsw-alias-label-caption);
 }
 
-/* Dialog field: 44 tall on the modal's 332 content column, r22, hairline
-   border, pad 14/7, 14/22 wt400 primary text, caption placeholder. Focus
-   keeps the resting border (design shows no focus ring). */
+/* Dialog field: 44 tall on the modal's 332 content column, hairline border,
+   pad 14/7, 14/22 wt400 primary text, caption placeholder. Focus keeps the
+   resting border (design shows no focus ring). */
 .modalInput {
   box-sizing: border-box;
   width: 100%;
   height: 44px;
   padding: 7px 14px;
   border: 0.5px solid var(--dsw-alias-border-l4);
-  border-radius: 22px;
+  border-radius: 8px;
   outline: none;
   background: transparent;
   font-size: 14px;

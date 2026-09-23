@@ -246,7 +246,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 24px;
+  /* A floor, not a cap: the wordmark path settles at 24px, while the local
+     build's two-line name + version badge needs the extra rung. */
+  min-height: 24px;
   min-width: 0;
 }
 
@@ -263,10 +265,10 @@
   gap: 6px;
   min-width: 0;
   height: 24px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
   line-height: 24px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .fallbackBrandName {
@@ -282,13 +284,12 @@
   align-items: flex-start;
   justify-content: center;
   gap: 1px;
-  height: 24px;
   white-space: nowrap;
 }
 
 .localBuildTitle {
   font-size: 12px;
-  line-height: 13px;
+  line-height: 14px;
   letter-spacing: 0;
 }
 
@@ -347,24 +348,29 @@
   color: var(--dsw-alias-label-primary);
 }
 
+/* Local-build tag: informational, so it takes the reference's `badge-code`
+   chrome rather than the ink fill — that leaves New Session as the sidebar's
+   only ink element. */
 .buildVersion {
   flex: none;
   display: inline-flex;
   align-items: center;
-  height: 10px;
-  padding: 0 3px;
-  border-radius: 2px;
-  color: var(--dsw-alias-label-primary-inverted);
-  background: var(--dsw-alias-label-primary);
+  height: 13px;
+  padding: 0 4px;
+  border-radius: 6px;
+  color: var(--dsw-alias-label-primary-bluish);
+  background: var(--dsw-alias-state-business-tertiary);
   font-family: var(--ds-font-family-code);
-  font-size: 6px;
-  font-weight: 500;
-  line-height: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 13px;
   white-space: nowrap;
 }
 
-/* New Session: 38px bar, 12px radius (figma 133:7634 geometry, squared-off
-   corners); collapsed it renders as the rail's plain icon control. */
+/* New Session: the design language's dominant call to action, so it carries
+   button-primary — the ink fill that inverts with the palette and is the one
+   element the reference anchors every surface in. 38px pill; collapsed it
+   renders as the rail's plain icon control. */
 .newSession {
   flex: none;
   display: flex;
@@ -375,10 +381,11 @@
   padding: 8px 16px;
   margin: 0 2px 12px;
   box-sizing: border-box;
-  border: 0.5px solid var(--dsw-alias-border-l3);
-  border-radius: 12px;
-  background: var(--dsw-alias-button-elevated-fill);
-  color: var(--dsw-alias-label-primary);
+  border: none;
+  border-radius: 999px;
+  corner-shape: round;
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
   font-size: 14px;
   font-weight: 500;
   line-height: 22px;
@@ -387,18 +394,18 @@
 }
 
 .newSession:hover {
-  background: var(--dsw-alias-button-floating-hover);
+  background: var(--dsw-alias-button-primary-hover);
 }
 
-/* macOS: the solid elevated fill reads as a foreign slab on the vibrancy
-   sidebar; letting a quarter of the material through keeps the card visible
-   while it sits in the glass. */
+/* macOS: the solid ink fill reads as a foreign slab on the vibrancy sidebar;
+   letting a quarter of the material through keeps the card visible while it
+   sits in the glass. */
 :global([data-platform='darwin']) .newSession {
-  background: color-mix(in srgb, var(--dsw-alias-button-elevated-fill) 75%, transparent);
+  background: color-mix(in srgb, var(--dsw-alias-button-primary-fill) 75%, transparent);
 }
 
 :global([data-platform='darwin']) .newSession:hover {
-  background: color-mix(in srgb, var(--dsw-alias-button-floating-hover) 75%, transparent);
+  background: color-mix(in srgb, var(--dsw-alias-button-primary-hover) 75%, transparent);
 }
 
 .collapsed .newSession {
@@ -408,7 +415,6 @@
   padding: 0;
   margin: 0 0 12px;
   gap: 0;
-  border-color: transparent;
   background: transparent;
 }
 

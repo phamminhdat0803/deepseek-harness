@@ -200,15 +200,15 @@
   background: transparent;
 }
 
-/* Selected tab is blue, not ink: brand-primary resolves to neutral black in
-   this token sheet, so the selected state rides the business blue — the
-   nearest semantic token that stays blue in both themes. */
+/* Selected tab rides the design language's ink, not a state hue: the
+   reference's segmented tab is ink text over a 2px ink underline, and
+   brand-primary is the ink that inverts with the palette. */
 .tabActive {
-  color: var(--dsw-alias-state-business-primary);
+  color: var(--dsw-alias-brand-primary);
 }
 
 .tabActive::after {
-  background: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-brand-primary);
 }
 
 .viewArea {

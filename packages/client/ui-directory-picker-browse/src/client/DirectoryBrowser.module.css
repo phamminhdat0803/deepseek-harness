@@ -401,7 +401,7 @@
   height: 44px;
   padding: 7px 14px;
   border: 0.5px solid var(--dsw-alias-border-l4);
-  border-radius: 22px;
+  border-radius: 8px;
   outline: none;
   background: transparent;
   font-size: 14px;

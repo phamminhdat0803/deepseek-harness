@@ -3,6 +3,8 @@
 Status: implemented
 
 > Token-system update (2026-07-22): the framework rulings here (CSS Modules + clsx, no component library, no tailwind, tokens-only colors) remain in force, but the two-layer `--bg-*`/`--text-*` token table and its `web-ui/src/style/global.css` home were replaced by the `--dsw-*` static+alias sheets in `packages/client/ui-theme/src/styles/` (dark = `body[data-ds-dark-theme]` override) — the sheets themselves are the token authority.
+>
+> Visual-baseline update (2026-09-21): decision 1's Chat-alignment baseline and its brand blue were replaced by a MiniMax-derived palette. The framework rulings, the token layering, and the engineering constraints above still hold; the values now come from [the visual-language Agent Note](2026-09-21-minimax-visual-language.md).
 
 English | [中文](2026-07-19-web-styling-system.zh.md)
 

@@ -14,6 +14,13 @@ import css from './HeroShell.module.css'
 type HeroTranslate = ConversationContentProps['t']
 
 /**
+ * Headline mark width in CSS pixels. The design language sets the hero
+ * headline at the heading-lg rung; the whale leads that line at a size that
+ * keeps its cap height proportionate to the 40px text beside it.
+ */
+const HERO_MARK_SIZE = 44
+
+/**
  * Basename label for the workspace chip (the shared derivation);
  * separator-only paths echo the raw cwd.
  * @param cwd - workspace directory path (non-empty).
@@ -101,8 +108,8 @@ function HeroFish({ hovering }: { hovering: boolean }) {
   return (
     <svg
       className={css.fish}
-      width={34}
-      height={(34 * FISH_LOGO_VIEWBOX.height) / FISH_LOGO_VIEWBOX.width}
+      width={HERO_MARK_SIZE}
+      height={(HERO_MARK_SIZE * FISH_LOGO_VIEWBOX.height) / FISH_LOGO_VIEWBOX.width}
       viewBox={`0 0 ${FISH_LOGO_VIEWBOX.width} ${FISH_LOGO_VIEWBOX.height}`}
       fill="none"
       aria-hidden="true"
@@ -135,7 +142,7 @@ export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
     <div className={css.root}>
       <div className={css.stack}>
         <div className={css.headline}>
-          {/* figma 34:10412: fish 34×25 leading the headline, gap 10. */}
+          {/* Headline mark: sized against the heading-lg rung in HeroShell. */}
           <span
             className={css.fishHitbox}
             onMouseEnter={() => {
@@ -145,7 +152,7 @@ export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
             }}
             onMouseLeave={() => { setHovering(false) }}
           >
-            {renderSlot('conversation.hero.brand.mark', { size: 34, className: css.fish }, {
+            {renderSlot('conversation.hero.brand.mark', { size: HERO_MARK_SIZE, className: css.fish }, {
               fallback: <HeroFish hovering={hovering} />,
             })}
           </span>

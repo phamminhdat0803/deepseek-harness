@@ -381,7 +381,9 @@ describe('Hero chrome', () => {
     if (brandMarkOwner === undefined || !('size' in brandMarkOwner) || !('className' in brandMarkOwner)) {
       throw new Error('hero brand-mark owner must provide size and className')
     }
-    expect(brandMarkOwner.size).toBe(34)
+    // The mark is sized against the hero's heading-lg rung in HeroShell, not
+    // against the artwork's own natural width.
+    expect(brandMarkOwner.size).toBe(44)
     expect(brandMarkOwner.className).toBeTypeOf('string')
     expect(renderSlot.mock.calls[0]?.[2]?.fallback).toBeTruthy()
   })

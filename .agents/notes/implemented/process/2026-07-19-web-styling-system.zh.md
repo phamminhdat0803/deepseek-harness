@@ -3,6 +3,8 @@
 Status: implemented
 
 > token 体系更新（2026-07-22）：本文框架裁决（CSS Modules + clsx、无组件库、无 tailwind、颜色只用 token）仍然生效，但两层 `--bg-*`/`--text-*` token 表及其宿主 `web-ui/src/style/global.css` 已被 `packages/client/ui-theme/src/styles/` 的 `--dsw-*` static+alias 双层表取代（暗色=`body[data-ds-dark-theme]` 覆写）——样式表本身即 token 权威。
+>
+> 视觉基线更新（2026-09-21）：决策 1 的"对齐 Chat"基线及其品牌蓝已被 MiniMax 推导配色取代。上文框架裁决、token 分层与工程约束仍然生效；取值改由[视觉语言 Agent Note](2026-09-21-minimax-visual-language.zh.md)承载。
 
 [English](2026-07-19-web-styling-system.md) | 中文
 
