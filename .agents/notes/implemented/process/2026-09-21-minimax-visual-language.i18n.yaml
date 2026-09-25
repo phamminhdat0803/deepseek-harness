@@ -1,6 +1,19 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for 2026-09-21-minimax-visual-language.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-09-21-minimax-visual-language.md
-2026-09-21-minimax-visual-language.md: 3f98fea3ecaa8ed29ca0e9b257d9d5d620902e5e
-2026-09-21-minimax-visual-language.zh.md: 8cfdd2a2850bb9b20f3e7d5e6887e28edf9e99bf
+/agent-note-minimax-derived-visual-language-for-the-web-client:
+  en: 8b3ebdc39c52bbe2
+  zh: 3fea0108b8fc1e88
+/agent-note-minimax-derived-visual-language-for-the-web-client/problem:
+  en: 6470dbc36b30b19e
+  zh: 8ebbd821b761fc78
+/agent-note-minimax-derived-visual-language-for-the-web-client/decision:
+  en: 18f469b5544e0a59
+  zh: c8db6e18d6c5d2d9
+/agent-note-minimax-derived-visual-language-for-the-web-client/alternatives-considered:
+  en: 036a2d872c9eff1e
+  zh: 8a9085a516811ac1
+/agent-note-minimax-derived-visual-language-for-the-web-client/consequences:
+  en: 66cc8d803201b971
+  zh: aafe228575e4e5c3

@@ -2,6 +2,7 @@
  * no longer varies by size (h36 medium, h28 compact) and owners with a wide
  * form set only width. */
 .button {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -26,8 +27,7 @@
   height: 36px;
 }
 
-/* Compact height for dense rows; no dedicated figma node (Icon_container
- * 28x28 is the icon-only form) — geometry is ours. */
+/* Compact controls retain their dimensions across filled and outlined variants. */
 .sm {
   height: 28px;
   font-size: 12px;
@@ -52,7 +52,7 @@
   background: var(--dsw-alias-interactive-bg-active);
 }
 
-/* Dialog Cancel (figma 451:18655): bordered capsule on transparent fill. */
+/* Outlined actions use the same neutral stroke as settings links. */
 .outline {
   border: 0.5px solid var(--dsw-alias-border-l3);
   background: transparent;
