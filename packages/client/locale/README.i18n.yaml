@@ -29,6 +29,9 @@
 /deepseek-ai-dsh-client-locale/use-this-package/registering-a-language-pack:
   en: aa4e9c70523339cc
   zh: 3359eddc4e9ef15e
+/deepseek-ai-dsh-client-locale/use-this-package/the-bundled-vietnamese-pack:
+  en: 037cbad322d92cd6
+  zh: d50fa6efa3da534a
 /deepseek-ai-dsh-client-locale/use-this-package/what-the-host-half-does:
   en: 8fa91333f7fc3387
   zh: 789a9cbb3eace3b0
@@ -45,8 +48,8 @@
   en: f8dcc4035830e738
   zh: 8452ac63ee148c61
 /deepseek-ai-dsh-client-locale/understand-the-implementation/source-map:
-  en: a382e032c06ced3f
-  zh: 419cb5f60b075388
+  en: 09f7f1aaf6dbb7b5
+  zh: 27da0cb0e419e567
 /deepseek-ai-dsh-client-locale/further-exploration:
   en: b6986484dd8ae2c5
   zh: 003635bfa6ea1b9d

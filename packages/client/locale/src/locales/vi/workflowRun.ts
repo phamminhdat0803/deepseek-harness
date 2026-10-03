@@ -1,0 +1,21 @@
+/** Vietnamese dictionary for the `workflowRun` namespace. */
+export const vi = {
+  'run.title': '{name}',
+  'run.members.one': '{count} thành viên',
+  'run.members.other': '{count} thành viên',
+  'run.empty': 'Chưa có thành viên nào khởi chạy',
+  'phase.unassigned': 'Chưa chia giai đoạn',
+  'phase.empty': 'Tên giai đoạn trống',
+  'statusCount.running': 'Đang chạy {count}',
+  'statusCount.completed': 'Đã xong {count}',
+  'statusCount.failed': 'Thất bại {count}',
+  'statusCount.cancelled': 'Đã hủy {count}',
+  'statusCount.interrupted': 'Đã ngắt {count}',
+  'member.empty': 'Tên thành viên trống',
+  'member.open': 'Mở {name}',
+  'status.running': 'Đang chạy',
+  'status.completed': 'Đã xong',
+  'status.failed': 'Thất bại',
+  'status.cancelled': 'Đã hủy',
+  'status.interrupted': 'Đã ngắt',
+} satisfies Record<string, string>

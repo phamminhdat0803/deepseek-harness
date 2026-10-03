@@ -17,11 +17,11 @@
  * and at least one model — are required here rather than at load, so the
  * failure names the field while the user is still looking at it.
  *
- * There is deliberately no reasoning-effort control, here or on the editor
- * card: effort is a per-MODEL capability, and the models under one provider
- * disagree about it, so a provider-scoped control can only be set to a value
- * some of them reject. The composer's model picker offers each model its own
- * levels instead.
+ * Reasoning effort is declared per model rather than once for the route: it
+ * is a per-MODEL capability, and the models under one provider disagree about
+ * it, so a provider-scoped control can only be set to a value some of them
+ * reject. Each row offers the levels this route's schema accepts, and the
+ * composer's model picker then offers each model its own levels.
  */
 
 import { useEffect, useState } from 'react'
@@ -33,6 +33,7 @@ import { validateDeepSeekModels } from './DeepSeekModelsEditor.tsx'
 import { ModelListEditor } from './ModelListEditor.tsx'
 import type { ModelDraft } from './ModelListEditor.tsx'
 import { deriveKeyRef } from './store.ts'
+import type { ReasoningEffortLevelChoice } from './store.ts'
 import { protocolLabel } from './protocol-label.ts'
 import type { ModelsOperations } from './operations.ts'
 import type { en } from './locales.ts'
@@ -66,6 +67,13 @@ export interface CustomProviderCardProps {
   taken: readonly string[]
   /** Wire protocols the adapter can serve, in the order it reports them. */
   protocols: readonly string[]
+  /**
+   * Reasoning levels a model of this route may declare, read from the
+   * `llm-pi-ai` schema. Effort is a per-model capability and the models under
+   * one route disagree about it, so it is declared on each row rather than
+   * once for the provider.
+   */
+  reasoningLevels: readonly ReasoningEffortLevelChoice[]
   /**
    * Revision of the `llm-pi-ai` user section this card opened at, sent with
    * the create so a route another tab declared meanwhile is a refusal rather
@@ -288,6 +296,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
       <ModelListEditor
         models={models}
         onChange={setModels}
+        reasoningLevels={props.reasoningLevels}
         probe={{
           settingsNs: NS,
           baseURL: normalizedBaseURL,

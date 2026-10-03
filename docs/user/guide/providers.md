@@ -110,7 +110,7 @@ Both fields state a claim about your endpoint rather than checking it. A model t
 
 ### Reasoning effort
 
-The model picker offers an **Effort** menu for a model that declares reasoning levels. A built-in provider's models inherit their levels from the installed catalog. A model you enter by hand declares none, so the Effort entry does not appear in the menu and the endpoint's own default decides whether the model thinks. Declare the levels with `reasoningEfforts` in `$DSH_HOME/profiles/<profile>/cordis.patch.yml`:
+The model picker offers an **Effort** menu for a model that declares reasoning levels. A built-in provider's models inherit their levels from the installed catalog. On the **Models** settings page, declare a hand-entered model's levels under **Customized settings → Model options → Reasoning effort**, where each checkbox writes the wire spelling and **No reasoning** writes `reasoningEfforts: false`. A model with no levels declared offers no Effort entry, and the endpoint's own default decides whether it thinks. Declare the levels in `$DSH_HOME/profiles/<profile>/cordis.patch.yml` when you prefer to keep them in the profile:
 
 ```yaml
 - id: llm-pi-ai
@@ -197,7 +197,8 @@ Every switch, its accepted values, and the protocols that take it are listed und
 - **Fetching available models reports neither a `data` array nor a `models` object** — The endpoint's listing is in a format discovery does not read. Enter the models by hand.
 - **The gateway refuses every request although the key and URL are right** — Its request shape differs from OpenAI's. Start with `compat.supportsDeveloperRole: false` and `compat.maxTokensField: max_tokens` on the route.
 - **Only reasoning models fail** — pi-ai sends their system prompt as the `developer` role, which the gateway rejects. Set `compat.supportsDeveloperRole: false`.
-- **The Effort menu does not appear for a model you entered by hand** — It declares no levels. Add `reasoningEfforts` to the model in `cordis.patch.yml`.
+- **The Effort menu does not appear for a model you entered by hand** — It declares no levels. Select them under **Customized settings → Model options → Reasoning effort**, or add `reasoningEfforts` to the model in `cordis.patch.yml`.
+- **The Models page offers no Reasoning effort control** — Only pi-ai routes declare per-model levels. DeepSeek's own route takes one provider-level `reasoningEffort` instead.
 - **`off` does not stop a DeepSeek model from thinking** — An empty `off` sends no reasoning field at all, and an endpoint that thinks by default keeps thinking. Set `compat.thinkingFormat: deepseek` on the model or the route.
 - **A compat switch is refused as having no value** — A key written with nothing after the colon. Give it a value, or remove the key to keep the installed catalog's.
 - **An image is refused before sending** — The model declares no image modality. Give a custom provider's model `input: [text, image]`; on DeepSeek's own route, select an image-capable entry from the configured catalog (`deepseek-flash` by default) and confirm that your gateway serves that model with image input.

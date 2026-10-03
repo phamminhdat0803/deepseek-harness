@@ -65,6 +65,10 @@ export function apply(ctx) {
 
 外部 id 必须是非空的 ASCII BCP 47 风格标签。它的 fallback 必须已经注册，且整条链必须终止于 `en`；未知目标、重复 id 与循环会在注册时失败。查找时先在请求命名空间内遍历生效语言的 fallback 链，再在 `common` 中遍历该链，最后显示键本身。卸载语言定义会将其从选择器移除，并让生效中的选择回落到可用的浏览器语言或默认语言。
 
+### 内置的越南语包
+
+本包同时内置 `vi` 语言包：[`src/locales/vi/`](src/locales/vi/) 为每个 Client UI 命名空间保存一个字典模块，[`src/locales/vi/index.ts`](src/locales/vi/index.ts) 列出它们，Client 半侧通过外部语言包使用的同一条 `addLanguage`/`register` 路径注册该语言与全部字典。每个字典与其命名空间的 zh 键集合完全一致——键相同、顺序相同——`pnpm run verify-vi-locale` 会遍历每一处 `locale.register(...)` 调用点，并在命名空间缺失、键集合或键顺序不同、占位符不一致或值为空时报错。包中未收录的键仍会沿 fallback 链由英文作答。
+
 ### Host 半侧做什么
 
 Host 通过 settings 服务为 loopback 页面持久化偏好。Client 会刻意拒绝非 loopback 页面使用该 settings scope，因此即使 Connection 认证所有 API 方法，它们的 locale 选择仍只存在于进程内。
@@ -100,7 +104,7 @@ Host 通过 settings 服务为 loopback 页面持久化偏好。Client 会刻意
 | [`src/client/index.ts`](src/client/index.ts) | `LocaleRuntime`、字典注册表、Language 行注册、`locale/change` 事件 |
 | [`src/index.ts`](src/index.ts) | node 半侧：注册 `locale` 设置命名空间 |
 | [`src/locale-settings.ts`](src/locale-settings.ts) | `locale.preference` 的持久 schema |
-| [`src/locales/`](src/locales/) | 内置的 `zh`／`en` 字典 |
+| [`src/locales/`](src/locales/) | 内置的 `zh`／`en` 字典与随包发布的 `vi` 语言包 |
 
 </details>
 

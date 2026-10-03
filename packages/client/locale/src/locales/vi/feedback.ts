@@ -1,0 +1,23 @@
+/** Vietnamese dictionary for the `feedback` namespace. */
+export const vi = {
+  'action.like': 'Câu trả lời tốt',
+  'action.likeActive': 'Bỏ đánh giá',
+  'action.dislike': 'Câu trả lời kém',
+  'action.dislikeActive': 'Bỏ đánh giá',
+  'dialog.title': 'Gửi phản hồi',
+  'dialog.categories': 'Loại phản hồi',
+  'dialog.detail': 'Chi tiết phản hồi',
+  'dialog.hint': 'Thêm chi tiết để giúp chúng tôi cải thiện. Nội dung gửi sẽ kèm nhật ký hội thoại hiện tại.',
+  'category.task-result': 'Kết quả công việc',
+  'category.instruction-following': 'Hiểu và làm theo chỉ dẫn',
+  'category.product-interaction': 'Tính năng sản phẩm và tương tác',
+  'category.service-stability': 'Độ ổn định và tốc độ',
+  'category.resource-cost': 'Mức sử dụng tài nguyên và chi phí',
+  'category.security-privacy-permission': 'Bảo mật, quyền riêng tư và quyền',
+  'category.other': 'Khác',
+  'toast.recorded': 'Cảm ơn phản hồi của bạn',
+  'error.conflict': 'Phản hồi này đã thay đổi ở nơi khác; đang hiển thị trạng thái mới nhất',
+  'error.load': 'Không thể tải phản hồi',
+  'error.generic': 'Không thể lưu phản hồi',
+  'error.noteTooLarge': 'Mô tả quá dài; hãy rút ngắn rồi gửi lại',
+} satisfies Record<string, string>

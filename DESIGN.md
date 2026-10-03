@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: MiniMax-design-analysis
-description: MiniMax presents itself as a premium AI infrastructure brand through a striking duality — bold black-pill CTAs and stark white canvas for marketing, paired with vibrant gradient product cards (orange-red, magenta-pink, purple, blue) that turn each model release into a distinctive visual identity. The system uses DM Sans across all surfaces, employs an oversized 80px hero display, anchors major actions in deep near-black pills, and layers content density via a 3-column documentation grid with sidebar nav, prose body, and TOC. Coverage spans the marketing homepage, model showcase pages, developer documentation, and platform pricing surfaces.
+description: MiniMax presents itself as a premium AI infrastructure brand through a striking duality — bold black-pill CTAs and stark white canvas for marketing, paired with vibrant gradient product cards (orange-red, magenta-pink, purple, blue) that turn each model release into a distinctive visual identity. The system uses Inter across all surfaces with Geist Mono for code, employs an oversized 80px hero display, anchors major actions in deep near-black pills, and layers content density via a 3-column documentation grid with sidebar nav, prose body, and TOC. Coverage spans the marketing homepage, model showcase pages, developer documentation, and platform pricing surfaces.
 
 colors:
   primary: "#0a0a0a"
@@ -35,81 +35,81 @@ colors:
 
 typography:
   hero-display:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 80px
     fontWeight: 600
     lineHeight: 1.10
     letterSpacing: -2px
   display-lg:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 56px
     fontWeight: 600
     lineHeight: 1.10
     letterSpacing: -1.5px
   heading-lg:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 40px
     fontWeight: 600
     lineHeight: 1.20
     letterSpacing: -1px
   heading-md:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 32px
     fontWeight: 600
     lineHeight: 1.25
     letterSpacing: -0.5px
   heading-sm:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 24px
     fontWeight: 600
     lineHeight: 1.30
   card-title:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 20px
     fontWeight: 600
     lineHeight: 1.40
   subtitle:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 18px
     fontWeight: 500
     lineHeight: 1.50
   body-md:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 16px
     fontWeight: 400
     lineHeight: 1.50
   body-md-bold:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 16px
     fontWeight: 700
     lineHeight: 1.50
   body-sm:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 14px
     fontWeight: 400
     lineHeight: 1.50
   body-sm-medium:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 14px
     fontWeight: 500
     lineHeight: 1.50
   caption:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.70
   caption-bold:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 13px
     fontWeight: 600
     lineHeight: 1.50
   micro:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 12px
     fontWeight: 400
     lineHeight: 1.50
   button-md:
-    fontFamily: DM Sans
+    fontFamily: Inter
     fontSize: 14px
     fontWeight: 600
     lineHeight: 1.40
@@ -382,12 +382,12 @@ components:
 
 MiniMax stages itself as a Chinese AI infrastructure brand with a sophisticated dual identity. Marketing surfaces and platform pages anchor in stark white canvas with deep-black typographic emphasis — the brand voice is confident, technical, almost editorial. But each model release gets its own vibrant gradient identity card: M2.7 in volcanic coral-red, Music 2.6 in magenta-pink, Hailuo in deep blue, Speech 2.8 in saturated orange-purple. Together these vibrant tiles read like album covers laid out on the homepage — each one declaring its own product personality.
 
-DM Sans anchors every surface from oversized 80px hero displays down to 12px micro labels. The geometric, slightly humanist character of the face suits both the dense documentation surfaces (where 14px body type carries 1.5 line-height for long-form prose) and the high-impact marketing displays (where -2px letter-spacing tightens 80px headlines). Buttons are universally pill-shaped (`rounded-full`) with a sharp two-tier system: black-pill primary (the dominant CTA) and outline-pill secondary. Cards split into two distinct families: vibrant gradient product showcases (32px corner softening) and quiet white documentation cards (16px corner softening).
+Inter anchors every surface from oversized 80px hero displays down to 12px micro labels. The neo-grotesque character of the face suits both the dense documentation surfaces (where 14px body type carries 1.5 line-height for long-form prose) and the high-impact marketing displays (where -2px letter-spacing tightens 80px headlines). Buttons are universally pill-shaped (`rounded-full`) with a sharp two-tier system: black-pill primary (the dominant CTA) and outline-pill secondary. Cards split into two distinct families: vibrant gradient product showcases (32px corner softening) and quiet white documentation cards (16px corner softening).
 
 **Key Characteristics:**
 - Stark monochrome palette — black ({colors.primary}) and white ({colors.canvas}) — broken open by saturated brand-color gradient cards
 - Distinct product-color encoding: each model line has its own vibrant brand color (coral M2.7, magenta Music 2.6, blue Hailuo, orange Speech 2.8)
-- DM Sans across the entire system; Inter as fallback
+- Inter across the entire system; Geist Mono for code, and no second display typeface
 - Pill-shaped buttons ({rounded.full}) and pill-shaped tabs everywhere; rectangular forms only inside data tables and dense docs
 - Hero typography uses tight 1.10 line-height with -2px letter-spacing for impact
 - Documentation surfaces use a 3-column layout: left sidebar nav, center prose body, right table-of-contents
@@ -431,9 +431,11 @@ DM Sans anchors every surface from oversized 80px hero displays down to 12px mic
 ## Typography
 
 ### Font Family
-**DM Sans** (primary): Geometric variable sans-serif. Used across every surface, every role. Fallbacks: Inter, Helvetica Neue, Helvetica, Arial.
+**Inter** (primary): Neo-grotesque variable sans-serif, shipped with the client. Used across every surface, every role. Fallbacks: Helvetica Neue, Helvetica, Arial, then the platform CJK faces (PingFang SC, Hiragino Sans GB, Microsoft YaHei).
 
-DM Sans was chosen for its dual fluency: it scales cleanly from 80px hero displays (where -2px letter-spacing creates magazine-grade tightness) down to 12px micro labels (where the slightly humanist counters maintain legibility). The face has no italic variant in the brand's deployment — emphasis comes from weight (500/600/700) instead.
+**Geist Mono** (code): Variable monospace, shipped with the client, confined to code, diff, and terminal payloads. Fallbacks: SF Mono, JetBrains Mono, Fira Code, Consolas.
+
+Inter was chosen for its dual fluency: it scales cleanly from 80px hero displays (where -2px letter-spacing creates magazine-grade tightness) down to 12px micro labels (where the tall x-height holds legibility), and one variable file covers every weight the ladder requests. Emphasis uses the true italic variable or a weight step (500/600/700); Inter is never synthesized as an oblique.
 
 ### Hierarchy
 
@@ -459,7 +461,7 @@ DM Sans was chosen for its dual fluency: it scales cleanly from 80px hero displa
 - **Tight hero leading** (1.10) and aggressive negative letter-spacing on display sizes create a magazine-quality typographic display unique to MiniMax.
 - **Generous body leading** (1.50) keeps long-form documentation comfortable; captions push to 1.70 for scientific-paper-grade clarity.
 - **Weight discipline:** 400 (body), 500 (medium emphasis), 600 (headings/buttons), 700 (strong inline emphasis). Heavier weights are not used.
-- **Single typeface** strategy — never mix DM Sans with another sans-serif. Code samples (when shown) use a system monospace fallback, but no second typeface enters the brand canvas.
+- **Single typeface** strategy — never mix Inter with another sans-serif. Geist Mono is the only other face and stays confined to code, diff, and terminal payloads, so no second display typeface enters the brand canvas.
 
 ## Layout
 
@@ -662,7 +664,7 @@ The system runs predominantly flat. Elevation is reserved for sticky panels, dro
 
 **`docs-prose-block`** — Documentation main content area.
 - Max-width ~720px, centered. Body in `{typography.body-md}` `{colors.charcoal}` line-height 1.6.
-- Inline code in `{typography.body-md}` monospace fallback with `{colors.surface}` background and `{rounded.xs}` corners.
+- Inline code in `{typography.body-md}` rendered in Geist Mono with `{colors.surface}` background and `{rounded.xs}` corners.
 
 **`models-comparison-table`** — Documentation table comparing model sizes and features.
 - Uses `data-table` chrome. Each row carries a model name (linkified, in `{colors.ink}` body-sm-medium), a description column (`{colors.charcoal}`), and a features bullet list column.
@@ -692,7 +694,7 @@ The system runs predominantly flat. Elevation is reserved for sticky panels, dro
 ### Don't
 - Don't use brand-coral or brand-magenta on body text or large surfaces — they lose meaning when overused.
 - Don't soften corners on buttons (anything less than `{rounded.full}`); the pill is a brand signature.
-- Don't introduce a second display typeface; DM Sans handles every role.
+- Don't introduce a second display typeface; Inter handles every role.
 - Don't reduce hero leading below 1.10 — the brand needs that breathing room on the 80px display.
 - Don't apply heavy shadows on white cards; flat-with-borders is the documentation default.
 - Don't put gradient backgrounds on standard buttons; gradients are reserved for product-card identity moments.
@@ -743,4 +745,4 @@ The system runs predominantly flat. Elevation is reserved for sticky panels, dro
 - Specific dark-mode token values (canvas, surface, ink, hairline) are not surfaced on these pages; the brand has not yet shipped a published dark-mode palette.
 - Animation/transition timings are not extracted; recommend 150–200ms ease for hover/focus state transitions.
 - Form validation success state is not explicitly captured beyond defaults — implement following standard green-border + success badge patterns.
-- Code syntax highlighting palette inside docs is not formalized; documentation samples appear with system-default monospace and minimal coloring.
+- Code syntax highlighting palette inside docs is not formalized; documentation samples appear in Geist Mono with minimal coloring.

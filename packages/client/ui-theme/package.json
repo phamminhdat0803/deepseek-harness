@@ -24,7 +24,8 @@
     },
     "./src/*": "./src/*",
     "./package.json": "./package.json",
-    "./brand-font.css": "./lib/styles/brand-font.css"
+    "./brand-font.css": "./lib/styles/brand-font.css",
+    "./ui-font.css": "./lib/styles/ui-font.css"
   },
   "dsh": {
     "client": {

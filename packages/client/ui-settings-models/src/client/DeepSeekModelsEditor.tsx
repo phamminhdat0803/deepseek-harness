@@ -73,7 +73,7 @@ export interface DeepSeekModelsValidationFailure {
   index: number
   /** Message key owned by the Models settings section. */
   key: 'modelIdRequired' | 'modelIdDuplicate' | 'modelNameInvalid' | 'modelContextInvalid'
-  | 'modelMaxTokensInvalid'
+  | 'modelMaxTokensInvalid' | 'modelReasoningEffortsEmpty'
 }
 
 /** Convert a schema-validated catalog value into records without dropping hidden fields. */
@@ -116,6 +116,16 @@ export function validateDeepSeekModels(value: unknown): DeepSeekModelsValidation
     if (maxTokens !== undefined
       && (typeof maxTokens !== 'number' || !Number.isInteger(maxTokens) || maxTokens <= 0)) {
       return { index, key: 'modelMaxTokensInvalid' }
+    }
+    // An empty effort dict declares nothing, which the adapter reads as
+    // neither inheritance nor a non-reasoning model, and refuses. The editor
+    // writes `false` in its place, so this only catches a hand-edited profile.
+    const efforts = model['reasoningEfforts']
+    if (efforts !== undefined && efforts !== false) {
+      if (typeof efforts !== 'object' || efforts === null || Array.isArray(efforts)
+        || Object.keys(efforts).length === 0) {
+        return { index, key: 'modelReasoningEffortsEmpty' }
+      }
     }
   }
   return undefined

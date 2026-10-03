@@ -65,6 +65,10 @@ export function apply(ctx) {
 
 An external id is a non-empty ASCII BCP 47-style tag. Its fallback must already be registered, and the chain must terminate at `en`; unknown targets, duplicate ids, and cycles fail at registration. Lookup walks the fallback chain in the requested namespace, repeats it in `common`, then displays the key. Unloading a definition removes it from the selector and returns an active selection to the available browser/default locale.
 
+### The bundled Vietnamese pack
+
+This package also ships a `vi` language pack: [`src/locales/vi/`](src/locales/vi/) holds one dictionary module per Client UI namespace, [`src/locales/vi/index.ts`](src/locales/vi/index.ts) lists them, and the Client half registers the language and every dictionary through the same `addLanguage`/`register` path an external pack uses. Each dictionary mirrors the zh key set of its namespace exactly — same keys, same order — and `pnpm run verify-vi-locale` walks every `locale.register(...)` call site and fails on a missing namespace, a key-set or key-order difference, a placeholder mismatch, or an empty value. A key the pack does not carry still answers from English through the fallback chain.
+
 ### What the Host half does
 
 The Host persists the preference through the settings service on loopback pages. The Client deliberately withholds that settings scope on non-loopback pages, so their locale selection remains process-local even though Connection authenticates every API method.
@@ -100,7 +104,7 @@ The typed object form requires complete dictionaries for both built-in locales. 
 | [`src/client/index.ts`](src/client/index.ts) | `LocaleRuntime`, dictionary registry, Language row registration, `locale/change` event |
 | [`src/index.ts`](src/index.ts) | Node half: registers the `locale` settings namespace |
 | [`src/locale-settings.ts`](src/locale-settings.ts) | The durable schema for `locale.preference` |
-| [`src/locales/`](src/locales/) | The shipped `zh`/`en` dictionaries |
+| [`src/locales/`](src/locales/) | The shipped `zh`/`en` dictionaries and the bundled `vi` pack |
 
 </details>
 

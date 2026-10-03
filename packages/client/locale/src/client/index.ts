@@ -24,6 +24,7 @@ import { en, zh, type CommonKey } from '../locales/index.ts'
 import {
   en as settingsEn, zh as settingsZh, type SettingsLocaleKey,
 } from '../locales/settings.ts'
+import { VI_LANGUAGE, VI_NAMESPACES } from '../locales/vi/index.ts'
 import type { LanguageRowInjected } from './LanguageRow.tsx'
 import { LanguageRow } from './LanguageRow.tsx'
 import { createLanguageRowStore } from './settings-store.ts'
@@ -578,6 +579,13 @@ export async function apply(ctx: ClientContext): Promise<void> {
   const locale = new LocaleRuntime(ctx, host, bootstrap)
   locale.register(COMMON_NS, { zh, en })
   locale.register(SETTINGS_NS, { zh: settingsZh, en: settingsEn })
+  // The bundled Vietnamese language pack: one language definition plus one
+  // dictionary per Client UI namespace, contributed through the same public
+  // registration path an external pack uses.
+  ctx.effect(() => locale.addLanguage(VI_LANGUAGE), 'locale: Vietnamese language')
+  for (const [ns, dict] of VI_NAMESPACES) {
+    ctx.effect(() => locale.register(ns, VI_LANGUAGE.id, dict), `locale: Vietnamese dictionary ${ns}`)
+  }
   ctx.provide('locale', locale)
   if (bridge !== undefined) {
     ctx.on('locale/change', (snapshot) => { bridge.onChange(snapshot.active) })

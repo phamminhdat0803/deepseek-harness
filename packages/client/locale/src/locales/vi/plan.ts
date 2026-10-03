@@ -1,0 +1,20 @@
+/** Vietnamese dictionary for the `plan` namespace. */
+export const vi = {
+  'chip.label': 'Kế hoạch',
+  'preview.title': 'Kế hoạch',
+  'preview.document': 'Kế hoạch · Markdown',
+  'preview.action': 'Mở',
+  'preview.open': 'Mở kế hoạch trong thanh bên',
+  'preview.full': 'Xem toàn bộ kế hoạch',
+  'preview.openNamed': 'Mở kế hoạch: {title}',
+  'preview.loading': 'Đang tải kế hoạch…',
+  'preview.failed': 'Không thể tải kế hoạch',
+  'preview.invalidAddress': 'Địa chỉ kế hoạch không hợp lệ',
+  'preview.historyUnavailable': 'Lịch sử phiên không khả dụng',
+  'preview.notFound': 'Không tìm thấy kế hoạch này',
+  'preview.unavailable': 'Xem trước kế hoạch không khả dụng',
+  'preview.expired': 'Bản xem trước kế hoạch tạm thời đã hết hạn. Hãy mở lại từ thẻ đang chờ duyệt.',
+  'chip.on.aria': 'Chế độ lập kế hoạch đang bật, bấm để tắt',
+  'chip.on.title': 'Chế độ lập kế hoạch đang bật — bấm để tắt (/plan off)',
+  'chip.exitFailed': 'Không thể thoát chế độ lập kế hoạch',
+} satisfies Record<string, string>

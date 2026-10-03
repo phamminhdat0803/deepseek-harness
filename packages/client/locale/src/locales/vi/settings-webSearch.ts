@@ -1,0 +1,21 @@
+/** Vietnamese dictionary for the `settings.webSearch` namespace. */
+export const vi = {
+  'title': 'Tìm kiếm web',
+  'description': 'Thiết lập nhà cung cấp tìm kiếm DeepSeek.',
+  'apiKey': 'Khóa API',
+  'apiKeyHint': 'Được lưu ngoài tệp cài đặt. Để trống để giữ khóa hiện tại.',
+  'apiKeySet': 'Đã cấu hình khóa.',
+  'apiKeyUnset': 'Chưa cấu hình khóa; chỉ hội thoại dùng mô hình tài khoản DeepSeek mới tìm kiếm được, qua endpoint mặc định.',
+  'baseUrl': 'Endpoint',
+  'baseUrlHint': 'Để trống để dùng mặc định của nhà cung cấp.',
+  'maxUses': 'Số lần tìm kiếm tối đa mỗi yêu cầu',
+  'maxUsesHint': 'Số lần một yêu cầu có thể tìm kiếm trước khi phải trả lời.',
+  'overridden': 'Đã ghi đè',
+  'reset': 'Khôi phục mặc định',
+  'readOnly': 'Bản triển khai này lưu cài đặt ở chế độ chỉ đọc.',
+  'unavailable': 'Plugin này chưa được tải nên hiện không thể cấu hình.',
+  'save': 'Lưu',
+  'saving': 'Đang lưu…',
+  'saveFailed': 'Bản triển khai không chấp nhận các giá trị này; chúng được giữ lại để bạn sửa.',
+  'invalidNumber': 'Nhập một số, hoặc để trống để dùng mặc định.',
+} satisfies Record<string, string>

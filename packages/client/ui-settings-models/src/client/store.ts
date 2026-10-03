@@ -22,6 +22,19 @@ import type { SettingsSchemaOperations } from './schema-operations.ts'
  */
 const PROBE_ROUTE = '\u0000probe'
 
+/**
+ * One level a model's `reasoningEfforts` may declare, paired with the wire
+ * spelling a checkbox writes for it. The level is pi-ai's vocabulary, which
+ * the schema owns; the spelling is what an OpenAI-compatible endpoint reads
+ * for that level, and stays identical to the level name where both agree.
+ */
+export interface ReasoningEffortLevelChoice {
+  /** pi-ai thinking level this declaration selects. */
+  level: string
+  /** Wire spelling dispatch sends, or `null` for `off`, which sends nothing. */
+  wire: string | null
+}
+
 /** One provider row after joining the configurable directory with live routes. */
 export interface ProviderDirectoryEntry {
   readonly provider: string
@@ -136,6 +149,50 @@ export function protocolChoices(
   const list = (node as { type?: string; list?: readonly { value?: unknown }[] } | undefined)
   if (list?.type !== 'union' || list.list === undefined) return []
   return list.list.map(entry => entry.value).filter((value): value is string => typeof value === 'string')
+}
+
+/**
+ * Wire spellings for the levels a `models` entry may declare, read out of the
+ * owning namespace's own schema. A schema read rather than a client-owned list
+ * so the levels this page offers cannot drift from the ones the adapter
+ * accepts, for the same reason {@link protocolChoices} reads protocols.
+ *
+ * The value a level is declared with is the spelling dispatch sends, which
+ * pi-ai forwards to an OpenAI-compatible endpoint as `reasoning_effort`. That
+ * endpoint's vocabulary is the deployment's, not this page's: the standard
+ * `reasoning_effort` levels share their spelling with pi-ai's level names, so
+ * writing the level name is correct wherever the gateway uses the standard
+ * field, and a gateway with its own vocabulary is a `cordis.patch.yml` edit.
+ * `off` is the one level that writes no value at all — the parameter's absence
+ * is how "do not think" travels — so it is the sole null here.
+ *
+ * A namespace whose models declare no such field (the DeepSeek family, whose
+ * effort is a provider-level default) yields an empty list, which hides the
+ * control rather than offering levels the schema cannot accept.
+ * @param namespace - the namespace view whose schema declares the profile shape.
+ * @param schema - settings schema operations.
+ * @returns the levels in the schema's own escalation order, or an empty list.
+ */
+export function reasoningEffortLevels(
+  namespace: SettingsNamespaceView | undefined,
+  schema: SettingsSchemaOperations,
+): readonly ReasoningEffortLevelChoice[] {
+  if (namespace === undefined) return []
+  const node = schema.nodeAtPath(schema.rehydrate(namespace.schema), [
+    'providers', PROBE_ROUTE, 'models', 'inner', 'reasoningEfforts',
+  ])
+  // `reasoningEfforts` is a union of the `false` arm and the dict; only the
+  // dict arm carries the levels, in its key union's own order.
+  const union = (node as { type?: string; list?: readonly unknown[] } | undefined)
+  if (union?.type !== 'union' || union.list === undefined) return []
+  const keys = (union.list as readonly { type?: string; sKey?: { list?: readonly { value?: unknown }[] } }[])
+    .find(arm => arm.type === 'dict')?.sKey?.list
+  if (keys === undefined) return []
+  return keys.flatMap((entry) => {
+    const level = entry.value
+    if (typeof level !== 'string') return []
+    return [{ level, wire: level === 'off' ? null : level }]
+  })
 }
 
 /** The credential reference a resolved profile names (its `apiKeyEnv` field). */

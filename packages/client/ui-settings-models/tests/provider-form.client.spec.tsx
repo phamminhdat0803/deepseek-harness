@@ -24,6 +24,16 @@ const t: ModelsSectionInjected['t'] = key => en[key]
 
 const PROTOCOLS = ['openai-completions', 'openai-responses', 'anthropic-messages']
 
+/** The levels the `llm-pi-ai` schema offers, as the section reads them. */
+const REASONING_LEVELS = [
+  { level: 'off', wire: null },
+  { level: 'low', wire: 'low' },
+  { level: 'medium', wire: 'medium' },
+  { level: 'high', wire: 'high' },
+  { level: 'xhigh', wire: 'xhigh' },
+  { level: 'max', wire: 'max' },
+]
+
 /** The pi-ai profile shape as the host serializes it, including the layer-1 fields. */
 const PiAiConfig = Schema.object({
   providers: Schema.dict(Schema.object({
@@ -37,6 +47,12 @@ const PiAiConfig = Schema.object({
       name: Schema.string(),
       contextWindow: Schema.number(),
       maxTokens: Schema.number(),
+      input: Schema.array(Schema.union(['text', 'image'])),
+      // Mirrors the adapter's own union of the `false` arm and the level dict.
+      reasoningEfforts: Schema.union([
+        Schema.const(false),
+        Schema.dict(Schema.union([Schema.string(), Schema.const(null)]), Schema.union(REASONING_LEVELS.map(level => level.level))),
+      ]),
     })),
     reasoning: Schema.union(['off', 'high']),
   })),
@@ -675,7 +691,8 @@ describe('endpoint interrogation', () => {
     const scripted = scriptedFace()
     render(
       <CustomProviderCard
-        taken={[]} protocols={PROTOCOLS} revision={7} operations={operationsWith(scripted.face)}
+        taken={[]} protocols={PROTOCOLS} reasoningLevels={REASONING_LEVELS}
+        revision={7} operations={operationsWith(scripted.face)}
         t={t} readOnly={false} onClose={vi.fn()}
       />,
     )
@@ -706,6 +723,83 @@ describe('endpoint interrogation', () => {
     expect(screen.getByLabelText(`${en.contextWindow} 1`)).toBeTruthy()
     expandModel(1)
     expect(screen.queryByLabelText(`${en.contextWindow} 1`)).toBeNull()
+  })
+
+  it('declares a hand-entered model\u2019s reasoning levels through the composer picker', async () => {
+    const { mutate } = await mountSection({
+      providers: { openai: { baseURL: 'https://proxy.example/v1', models: [{ id: 'acme-think' }] } },
+    })
+    openEditor('openai')
+    expandModel(1)
+
+    // The levels come from the adapter's own schema, so the row offers
+    // exactly what this namespace accepts.
+    const group = screen.getByLabelText(`${en.modelReasoningEfforts} 1`)
+    const level = (name: string) => within(group).getByLabelText<HTMLInputElement>(name)
+    expect(level('High').checked).toBe(false)
+
+    fireEvent.click(level('Low'))
+    fireEvent.click(level('High'))
+    fireEvent.click(level('Max'))
+    fireEvent.click(buttonNamed(en.apply))
+
+    await waitFor(() => { expect(mutate).toHaveBeenCalled() })
+    // Each level stores the spelling dispatch sends, not a client vocabulary.
+    expect(firstMutate(mutate).ops[0]?.value).toEqual([{
+      id: 'acme-think',
+      reasoningEfforts: { low: 'low', high: 'high', max: 'max' },
+    }])
+  })
+
+  it('stores `off` as the level whose absence means not thinking', async () => {
+    const { mutate } = await mountSection({
+      providers: { openai: { models: [{ id: 'acme-think' }] } },
+    })
+    openEditor('openai')
+    expandModel(1)
+
+    const group = screen.getByLabelText(`${en.modelReasoningEfforts} 1`)
+    fireEvent.click(within(group).getByLabelText('Off'))
+    fireEvent.click(buttonNamed(en.apply))
+
+    await waitFor(() => { expect(mutate).toHaveBeenCalled() })
+    // A null value, which is how "do not think" travels: the reasoning
+    // parameter is absent rather than set to a spelling.
+    expect(firstMutate(mutate).ops[0]?.value).toEqual([{
+      id: 'acme-think',
+      reasoningEfforts: { off: null },
+    }])
+  })
+
+  it('pins a model as non-reasoning instead of leaving an empty declaration', async () => {
+    const { mutate } = await mountSection({
+      providers: { openai: { models: [{ id: 'acme-plain' }] } },
+    })
+    openEditor('openai')
+    expandModel(1)
+
+    const group = screen.getByLabelText(`${en.modelReasoningEfforts} 1`)
+    fireEvent.click(within(group).getByLabelText(en.modelNoReasoning))
+    fireEvent.click(buttonNamed(en.apply))
+
+    await waitFor(() => { expect(mutate).toHaveBeenCalled() })
+    // `false`, not `{}`: an empty dict declares nothing, which the adapter
+    // refuses as neither inheritance nor a non-reasoning model.
+    expect(firstMutate(mutate).ops[0]?.value).toEqual([{
+      id: 'acme-plain',
+      reasoningEfforts: false,
+    }])
+  })
+
+  it('refuses a model declaring no level and no non-reasoning marker', async () => {
+    const { mutate } = await mountSection({
+      providers: { openai: { models: [{ id: 'acme-empty', reasoningEfforts: {} }] } },
+    })
+    openEditor('openai')
+
+    expect(screen.getByText(`${en.model} 1: ${en.modelReasoningEffortsEmpty}`)).toBeTruthy()
+    expect(buttonNamed(en.apply).disabled).toBe(true)
+    expect(mutate).not.toHaveBeenCalled()
   })
 
   it('closes the picker without adopting anything on cancel', async () => {
@@ -850,6 +944,7 @@ describe('hand-declared providers', () => {
       <CustomProviderCard
         taken={['openai']}
         protocols={PROTOCOLS}
+        reasoningLevels={REASONING_LEVELS}
         revision={7}
         operations={operationsWith(scripted.face)}
         t={t}

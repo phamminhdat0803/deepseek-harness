@@ -33,7 +33,7 @@ import {
 import { apiKeyFailure } from './apiKey.ts'
 import { EditorFooter } from './EditorFooter.tsx'
 import { ModelListEditor } from './ModelListEditor.tsx'
-import { deriveKeyRef, protocolChoices } from './store.ts'
+import { deriveKeyRef, protocolChoices, reasoningEffortLevels } from './store.ts'
 import { protocolLabel } from './protocol-label.ts'
 import type { ModelsOperations } from './operations.ts'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
@@ -486,6 +486,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
                   {...catalogProps}
                   catalogProvider={props.declared === true ? undefined : props.provider}
                   defaultInput={Array.isArray(defaultInput) ? defaultInput : undefined}
+                  reasoningLevels={reasoningEffortLevels(namespace, schema)}
                   probe={probe}
                   probeBlocked={keyFailure}
                   operations={operations}

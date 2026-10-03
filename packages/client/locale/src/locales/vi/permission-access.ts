@@ -1,0 +1,20 @@
+/** Vietnamese dictionary for the `permission.access` namespace. */
+export const vi = {
+  'mode': 'Chế độ truy cập, hiện tại: {name}',
+  'close': 'Đóng',
+  'preset.readOnly': 'Chỉ đọc',
+  'preset.workspaceWrite': 'Ghi trong không gian làm việc',
+  'preset.fullAccess': 'Toàn quyền',
+  'confirm.title': 'Bật toàn quyền?',
+  'confirm.description': 'Toàn quyền giảm bước xác nhận và cho phép agent thực hiện trực tiếp nhiều hành động hơn, gồm thao tác nhạy cảm, thay đổi tệp hoặc lệnh bên ngoài. Chỉ dùng khi bạn tin tưởng việc hiện tại.',
+  'confirm.acknowledge': 'Tôi hiểu rủi ro và muốn tiếp tục',
+  'confirm.cancel': 'Hủy',
+  'confirm.enable': 'Bật toàn quyền',
+  'auto.label': 'Auto review',
+  'auto.badge': 'EXP',
+  'auto.description': 'Chạy không sandbox sau khi chính mô hình của agent duyệt thử nghiệm mọi lời gọi công cụ gốc và lời gọi PTC bên trong.',
+  'auto.confirm.title': 'Bật Auto review (thử nghiệm)?',
+  'auto.confirm.description': 'Auto review chạy không sandbox. Trước mỗi lời gọi công cụ gốc và lời gọi PTC bên trong, chính mô hình của agent hiện tại sẽ duyệt xem có cho phép hay không; bạn phê duyệt hoặc từ chối những lời gọi mà nó từ chối. Tính năng này còn thử nghiệm, có thể cho phép hoặc từ chối sai, và dùng thêm token.',
+  'auto.confirm.acknowledge': 'Tôi hiểu những rủi ro này và muốn tiếp tục',
+  'auto.confirm.enable': 'Bật Auto review',
+} satisfies Record<string, string>

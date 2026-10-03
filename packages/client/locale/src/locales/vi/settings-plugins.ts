@@ -1,0 +1,8 @@
+/** Vietnamese dictionary for the `settings.plugins` namespace. */
+export const vi = {
+  'nav': 'Plugin tích hợp',
+  'title': 'Plugin tích hợp',
+  'intro': 'Xem các plugin đi kèm bản triển khai này.',
+  'tabs': 'Chế độ xem plugin',
+  'empty': 'Bản triển khai này không cung cấp chế độ xem plugin nào.',
+} satisfies Record<string, string>

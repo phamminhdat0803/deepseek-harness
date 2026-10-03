@@ -29,16 +29,21 @@ function clientDocumentTitle(): Plugin {
   }
 }
 
-/** Keep the redistribution license beside the bundled brand font. */
-function brandFontLicense(): Plugin {
+/** Redistribution license shipped beside the WOFF2 faces of each bundled stylesheet. */
+const BUNDLED_FONT_LICENSES: readonly string[] = ['Montserrat-OFL.txt', 'Inter-OFL.txt', 'Geist-Mono-OFL.txt']
+
+/** Keep each bundled font's redistribution license beside its emitted WOFF2 assets. */
+function fontLicenses(): Plugin {
   return {
-    name: 'dsh-brand-font-license',
+    name: 'dsh-font-licenses',
     async generateBundle() {
-      this.emitFile({
-        type: 'asset',
-        fileName: 'assets/fonts/Montserrat-OFL.txt',
-        source: await readFile(src('../../packages/client/ui-theme/src/styles/Montserrat-OFL.txt')),
-      })
+      for (const name of BUNDLED_FONT_LICENSES) {
+        this.emitFile({
+          type: 'asset',
+          fileName: `assets/fonts/${name}`,
+          source: await readFile(src(`../../packages/client/ui-theme/src/styles/${name}`)),
+        })
+      }
     },
   }
 }
@@ -170,7 +175,7 @@ export default defineConfig({
   // directory, and the served index resolves identically from the site root.
   base: './',
   plugins: [
-    rejectStandaloneServe(), clientDocumentTitle(), brandFontLicense(), react(), emitPreviewPage(),
+    rejectStandaloneServe(), clientDocumentTitle(), fontLicenses(), react(), emitPreviewPage(),
     productWebBundleIsolation(src('../..'), src('.')),
   ],
   build: {

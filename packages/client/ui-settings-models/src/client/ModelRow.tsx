@@ -7,6 +7,8 @@ import {
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
 import type { ModelsKey } from './locales.ts'
 import { ModelInputTypes } from './ModelInputTypes.tsx'
+import { ModelReasoningEfforts } from './ModelReasoningEfforts.tsx'
+import type { ReasoningEffortLevelChoice } from './store.ts'
 import styles from './ModelsSection.module.css'
 
 /** A capacity's editable text and adapter-specific inherited hint. */
@@ -29,6 +31,11 @@ interface ModelRowProps {
   t: (key: ModelsKey) => string
   contextWindow: CapacityInput
   maxTokens: CapacityInput
+  /**
+   * Levels this namespace's schema accepts, or an empty list for a family
+   * whose models declare none — which is what hides the control there.
+   */
+  reasoningLevels?: readonly ReasoningEffortLevelChoice[] | undefined
   onFieldChange: (field: 'id' | 'name', value: string | undefined) => void
   onIdBlur?: (value: string) => void
   onChange: (model: DeepSeekModelDraft) => void
@@ -106,6 +113,16 @@ export function ModelRow(props: ModelRowProps): ReactNode {
               model={model} field={props.inputField} position={position}
               fallback={props.inputFallback} disabled={disabled || props.inputLoading === true} t={t} onChange={props.onChange}
             />
+            {props.reasoningLevels === undefined || props.reasoningLevels.length === 0
+              ? null
+              : (
+                <ModelReasoningEfforts
+                  model={model} position={position}
+                  levels={props.reasoningLevels}
+                  disabled={disabled}
+                  t={t} onChange={props.onChange}
+                />
+              )}
           </div>
         )
         : null}

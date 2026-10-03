@@ -5,10 +5,16 @@ export default clientBundle(
   ['lib/types/index.js'],
   {
     lib: {
-      copy: [{
-        from: 'src/styles/{brand-font.css,montserrat-*.woff2,Montserrat-OFL.txt}',
-        to: 'lib/styles',
-      }],
+      copy: [
+        {
+          from: 'src/styles/{brand-font.css,montserrat-*.woff2,Montserrat-OFL.txt}',
+          to: 'lib/styles',
+        },
+        {
+          from: 'src/styles/{ui-font.css,inter-*.woff2,geist-mono-*.woff2,Inter-OFL.txt,Geist-Mono-OFL.txt}',
+          to: 'lib/styles',
+        },
+      ],
     },
   },
 )
