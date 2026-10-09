@@ -26,6 +26,7 @@ import type { CodeToolbarLabels } from '../CodeToolbar.tsx'
 import { CodeBlock } from './CodeBlock.tsx'
 import { parseFileLink } from './file-link.ts'
 import { renderTexToReact } from './katex.tsx'
+import { renderUiComponent } from './UiBlock.tsx'
 import { LinkIconMedium, classifyLinkPath } from '../LinkIcon.tsx'
 import { useMarkdownDelegate } from './MarkdownDelegate.tsx'
 import { HoverCard } from '../HoverCard.tsx'
@@ -381,6 +382,12 @@ function renderCode(node: Md.Code, key: Key, context: MarkdownRenderContext): Re
         <code className={language === undefined ? undefined : `language-${language}`} />
       </pre>
     )
+  }
+  if (language !== undefined && /^(?:ui:|ui-)/i.test(language)) {
+    const ui = renderUiComponent(language, node.value)
+    if (ui !== null) {
+      return <Fragment key={key}>{ui}</Fragment>
+    }
   }
   // The replaced pipeline recovered the grammar id from the hast class with
   // /language-([\w-]+)/, which truncates at the first non-word character.
