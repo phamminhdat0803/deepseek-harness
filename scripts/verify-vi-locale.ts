@@ -209,7 +209,7 @@ function parseModule(abs: string): ModuleInfo {
       && /(^|\.)register$/.test(node.expression.getText(source))) {
       const first = node.arguments[0]
       let ns = literalText(first, source)
-      if (ns === null && ts.isIdentifier(first)) ns = resolveConst(abs, first.text)
+      if (ns === null && first !== undefined && ts.isIdentifier(first)) ns = resolveConst(abs, first.text)
       const second = unwrap(node.arguments[1])
       const literal = second !== undefined && ts.isObjectLiteralExpression(second) ? second : null
       const inline = second !== undefined && ts.isIdentifier(second) && info.inlineDicts.size > 0
@@ -288,9 +288,11 @@ function readPack(): Map<string, { file: string; keys: string[]; values: Record<
   for (const match of index.matchAll(/\['([^']+)',\s*(\w+)\]/g)) {
     const ns = match[1]
     const identifier = match[2]
+    if (ns === undefined || identifier === undefined) continue
     const importMatch = index.match(new RegExp(`import \\{ vi as ${identifier} \\} from '\\./([^']+)'`))
     if (importMatch === null) continue
     const file = importMatch[1]
+    if (file === undefined) continue
     const source = ts.createSourceFile(file, readFileSync(join(viRoot, file), 'utf8'), ts.ScriptTarget.Latest, true)
     let values: Record<string, string | null> = {}
     for (const statement of source.statements) {
@@ -371,7 +373,7 @@ function main(): void {
     }
     for (const key of sourceKeys) {
       const value = dictionary.values[key]
-      if (value === undefined) continue
+      if (value === undefined || value === null) continue
       const sourceText = source[key] ?? ''
       // Fragments (separators, prefixes, multi-line bodies) carry opaque
       // whitespace, so an entry is only empty when the source is not.

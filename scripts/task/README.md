@@ -29,6 +29,12 @@ Khởi động `dsh web` tự động qua **Windows Task Scheduler** khi đăng 
   - Chọn **End** để tắt.
   - Chọn **Run** để bật.
 
+> **Cảnh báo:** nút **End** chỉ giết `wscript.exe`. Server là *cháu* của task
+> (`wscript.exe` -> `cmd.exe` -> `node.exe`), nên `node.exe` vẫn sống, vẫn giữ port
+> 3080, và snapshot task vẫn hiện **Running** với `Last Result = 267009`
+> (`0x41301` = "task is currently running"). Muốn dừng thật thì dùng
+> `stop-task.bat`, hoặc `schtasks /end` rồi `powershell -File dsh-web-stop.ps1`.
+
 ### 3. Dùng lệnh CMD / PowerShell (Không cần quyền Admin)
 - Dừng: `schtasks /end /tn "dsh-web"`
 - Bật: `schtasks /run /tn "dsh-web"`
