@@ -27,6 +27,7 @@ import { CodeBlock } from './CodeBlock.tsx'
 import { parseFileLink } from './file-link.ts'
 import { renderTexToReact } from './katex.tsx'
 import { renderUiComponent } from './UiBlock.tsx'
+import { IconCheckCircleFillRegular, IconCloseCircleFillRegular } from '../icons/index.tsx'
 import { LinkIconMedium, classifyLinkPath } from '../LinkIcon.tsx'
 import { useMarkdownDelegate } from './MarkdownDelegate.tsx'
 import { HoverCard } from '../HoverCard.tsx'
@@ -264,6 +265,40 @@ function renderBlockEntries(
   return entries
 }
 
+const STATUS_SYMBOL_REGEX = /([✅✓]|:check:|[❌✗]|:cross:|:x:)/u
+
+function renderInlineText(text: string, key: Key): ReactNode {
+  if (!STATUS_SYMBOL_REGEX.test(text)) {
+    return text
+  }
+
+  const parts: ReactNode[] = []
+  const tokens = text.split(STATUS_SYMBOL_REGEX)
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+    if (!token) continue
+    const subKey = `${String(key)}-${i}`
+    if (token === '✅' || token === '✓' || token === ':check:') {
+      parts.push(
+        <span key={subKey} className={css.inlineStatusIcon} data-status="check" title="Thành công / Cho phép">
+          <IconCheckCircleFillRegular size={14} />
+        </span>,
+      )
+    } else if (token === '❌' || token === '✗' || token === ':cross:' || token === ':x:') {
+      parts.push(
+        <span key={subKey} className={css.inlineStatusIcon} data-status="close" title="Thất bại / Chặn">
+          <IconCloseCircleFillRegular size={14} />
+        </span>,
+      )
+    } else {
+      parts.push(token)
+    }
+  }
+
+  if (parts.length === 1) return parts[0]
+  return <Fragment key={key}>{parts}</Fragment>
+}
+
 function renderChildren(
   nodes: readonly Md.RootContent[],
   context: MarkdownRenderContext,
@@ -274,7 +309,7 @@ function renderChildren(
 function renderNode(node: Md.RootContent, key: Key, context: MarkdownRenderContext): ReactNode {
   switch (node.type) {
     case 'text':
-      return node.value
+      return renderInlineText(node.value, key)
     case 'paragraph':
       return <p key={key}>{renderChildren(node.children, context)}</p>
     case 'heading':

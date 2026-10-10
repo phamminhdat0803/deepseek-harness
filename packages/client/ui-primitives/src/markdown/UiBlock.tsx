@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import clsx from 'clsx'
 import {
-  IconCheckCircleFillRegular, IconClockOutlineRegular, IconInfoOutlineRegular,
-  IconSparkleRegular, IconWarningTriangleOutlineRegular,
+  IconCheckCircleFillRegular, IconCloseCircleFillRegular, IconClockOutlineRegular,
+  IconInfoOutlineRegular, IconSparkleRegular, IconWarningTriangleOutlineRegular,
 } from '../icons/index.tsx'
 import { StateDot } from '../StateDot.tsx'
 import type { StateDotState } from '../StateDot.tsx'
@@ -43,6 +43,14 @@ function renderNamedIcon(name: string | undefined, size = 16): ReactNode {
     case 'success':
     case 'done':
       return <IconCheckCircleFillRegular size={size} />
+    case 'close':
+    case 'cross':
+    case 'x':
+    case 'fail':
+    case 'error':
+    case 'danger':
+    case 'cancel':
+      return <IconCloseCircleFillRegular size={size} />
     case 'warning':
     case 'alert':
     case 'warn':
@@ -67,8 +75,10 @@ function defaultVariantIcon(variant: string | undefined): ReactNode {
     case 'success':
       return <IconCheckCircleFillRegular size={16} />
     case 'warning':
-    case 'danger':
       return <IconWarningTriangleOutlineRegular size={16} />
+    case 'danger':
+    case 'error':
+      return <IconCloseCircleFillRegular size={16} />
     case 'info':
       return <IconInfoOutlineRegular size={16} />
     default:
@@ -86,15 +96,20 @@ function parsePercent(val: unknown): number {
 }
 
 /**
- * Parse simple inline markdown formatting (**bold**, `code`, *italic*).
+ * Parse simple inline markdown formatting (**bold**, `code`, *italic*) and status icons.
  */
 function renderFormattedText(text: string): ReactNode {
   if (!text) return null
-  if (!text.includes('**') && !text.includes('`') && !text.includes('*')) {
+  if (
+    !text.includes('**') &&
+    !text.includes('`') &&
+    !text.includes('*') &&
+    !/[✅❌✓✗]|:check:|:cross:|:x:/u.test(text)
+  ) {
     return text
   }
 
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|[✅✓]|:check:|[❌✗]|:cross:|:x:)/gu
   const parts: ReactNode[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null = regex.exec(text)
@@ -111,6 +126,18 @@ function renderFormattedText(text: string): ReactNode {
       parts.push(<strong key={key} className={css.strong}>{token.slice(2, -2)}</strong>)
     } else if (token.startsWith('*') && token.endsWith('*')) {
       parts.push(<em key={key}>{token.slice(1, -1)}</em>)
+    } else if (token === '✅' || token === '✓' || token === ':check:') {
+      parts.push(
+        <span key={key} className={css.inlineStatusIcon} data-status="check" title="Thành công / Cho phép">
+          <IconCheckCircleFillRegular size={14} />
+        </span>,
+      )
+    } else if (token === '❌' || token === '✗' || token === ':cross:' || token === ':x:') {
+      parts.push(
+        <span key={key} className={css.inlineStatusIcon} data-status="close" title="Thất bại / Chặn">
+          <IconCloseCircleFillRegular size={14} />
+        </span>,
+      )
     } else {
       parts.push(token)
     }
@@ -246,6 +273,43 @@ function renderMetrics(data: Record<string, unknown>): ReactNode {
   )
 }
 
+function renderTableComponent(data: Record<string, unknown>): ReactNode {
+  const headers = Array.isArray(data.headers) ? data.headers.map(String) : []
+  const rows = Array.isArray(data.rows) ? data.rows : []
+  const title = typeof data.title === 'string' ? data.title : undefined
+
+  return (
+    <div className={clsx(css.container, css.tableBlockWrap)}>
+      {title && <div className={css.tableTitle}>{renderFormattedText(title)}</div>}
+      <div className={css.tableScrollWrap}>
+        <table className={css.uiTable}>
+          {headers.length > 0 && (
+            <thead>
+              <tr>
+                {headers.map((h, i) => (
+                  <th key={i}>{renderFormattedText(h)}</th>
+                ))}
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {rows.map((row, rIdx) => {
+              const cells = Array.isArray(row) ? row : [row]
+              return (
+                <tr key={rIdx}>
+                  {cells.map((c, cIdx) => (
+                    <td key={cIdx}>{renderFormattedText(String(c ?? ''))}</td>
+                  ))}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 /**
  * Render a UI component from a structured JSON code block (e.g. ```ui:progress).
  * Returns null if the JSON is malformed or the component type is unrecognized,
@@ -279,6 +343,9 @@ export function renderUiComponent(type: string, rawJson: string): ReactNode | nu
     case 'stat':
     case 'stats':
       return renderMetrics(record)
+    case 'table':
+    case 'grid':
+      return renderTableComponent(record)
     default:
       return null
   }

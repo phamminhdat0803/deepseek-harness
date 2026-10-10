@@ -91,6 +91,48 @@ describe('MarkdownText Rich UI blocks', () => {
     expect(code?.textContent).toBe('mã code')
   })
 
+  it('renders check and close status SVG icons instead of raw symbols in markdown and tables', () => {
+    const md = [
+      '| Hành động | Kết quả |',
+      '| --- | --- |',
+      '| hằng duyệt bước của sơn | CHẶN 403 ✅ |',
+      '| đạt CHẤM ĐIỂM | CHO PHÉP ❌ |',
+    ].join('\n')
+
+    const { container } = render(<MarkdownText text={md} />)
+    const checkIcon = container.querySelector('[data-status="check"]')
+    const closeIcon = container.querySelector('[data-status="close"]')
+
+    expect(checkIcon).toBeTruthy()
+    expect(closeIcon).toBeTruthy()
+    // Verifies SVG icon elements are inside
+    expect(checkIcon?.querySelector('svg')).toBeTruthy()
+    expect(closeIcon?.querySelector('svg')).toBeTruthy()
+  })
+
+  it('renders ui:table as a styled dashboard table with formatted cells', () => {
+    const md = [
+      '```ui:table',
+      JSON.stringify({
+        title: 'Bảng kiểm thử',
+        headers: ['Hành động', 'Kết quả'],
+        rows: [
+          ['hằng duyệt bước của **sơn**', 'CHẶN 403 ✅'],
+          ['đạt CHẤM ĐIỂM', 'CHO PHÉP ❌'],
+        ],
+      }),
+      '```',
+    ].join('\n')
+
+    const { container } = render(<MarkdownText text={md} />)
+    expect(screen.getByText('Bảng kiểm thử')).toBeTruthy()
+    expect(screen.getByText('Hành động')).toBeTruthy()
+    expect(screen.getByText('Kết quả')).toBeTruthy()
+    expect(container.querySelector('strong')?.textContent).toBe('sơn')
+    expect(container.querySelector('[data-status="check"]')).toBeTruthy()
+    expect(container.querySelector('[data-status="close"]')).toBeTruthy()
+  })
+
   it('renders ui:metrics grid with statistics', () => {
     const md = [
       '```ui:metrics',
