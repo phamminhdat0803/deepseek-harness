@@ -8,9 +8,10 @@ Khởi động `dsh web` tự động qua **Windows Task Scheduler** khi đăng 
 - **Port**: `http://127.0.0.1:3080`
 - **Logs**: `logs/dsh-web.log` (ghi nhận token và URL truy cập)
 - **Cơ chế**:
-  - Chạy ngầm hoàn toàn qua VBScript (không hiện cửa sổ terminal đen).
+  - Chạy ngầm hoàn toàn qua VBScript (`run-dsh-web.vbs` -> `run-service.mjs`, không hiện cửa sổ terminal đen).
   - Tự động mở trình duyệt mặc định truy cập web kèm token xác thực.
   - Khi gõ lệnh `dsh web`, nếu task đang chạy thì tự mở lại link trên trình duyệt, không mở tiến trình thứ hai trùng lặp.
+  - **Đồng bộ vòng đời**: `run-service.mjs` theo dõi PID của `wscript.exe`. Khi bấm **End** trong Task Scheduler hoặc chạy `schtasks /end`, tiến trình Node tự động tắt theo và giải phóng port 3080 ngay lập tức (không bị treo zombie).
 
 ## Quản lý Task
 
@@ -26,14 +27,8 @@ Khởi động `dsh web` tự động qua **Windows Task Scheduler** khi đăng 
 - Nhấn `Win + R` -> gõ `taskschd.msc` -> Enter.
 - Chọn **Task Scheduler Library** -> tìm task **`dsh-web`**.
 - Chuột phải:
-  - Chọn **End** để tắt.
+  - Chọn **End** để tắt (Node server và port 3080 sẽ được giải phóng trong vòng 400ms).
   - Chọn **Run** để bật.
-
-> **Cảnh báo:** nút **End** chỉ giết `wscript.exe`. Server là *cháu* của task
-> (`wscript.exe` -> `cmd.exe` -> `node.exe`), nên `node.exe` vẫn sống, vẫn giữ port
-> 3080, và snapshot task vẫn hiện **Running** với `Last Result = 267009`
-> (`0x41301` = "task is currently running"). Muốn dừng thật thì dùng
-> `stop-task.bat`, hoặc `schtasks /end` rồi `powershell -File dsh-web-stop.ps1`.
 
 ### 3. Dùng lệnh CMD / PowerShell (Không cần quyền Admin)
 - Dừng: `schtasks /end /tn "dsh-web"`
