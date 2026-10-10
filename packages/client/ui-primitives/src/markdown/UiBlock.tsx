@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import clsx from 'clsx'
 import {
-  IconCheckCircleFillRegular, IconCloseCircleFillRegular, IconClockOutlineRegular,
+  IconCheckCircleFillRegular, IconChevronDownOutlineRegular, IconCloseCircleFillRegular,
+  IconClockOutlineRegular, IconDatabaseOutlineRegular, IconFolderCloseRegular,
   IconInfoOutlineRegular, IconSparkleRegular, IconWarningTriangleOutlineRegular,
 } from '../icons/index.tsx'
+import { FileTypeIcon } from '../FileTypeIcon.tsx'
 import { StateDot } from '../StateDot.tsx'
 import type { StateDotState } from '../StateDot.tsx'
 import type { TagTone } from '../Tag.tsx'
@@ -65,6 +68,24 @@ function renderNamedIcon(name: string | undefined, size = 16): ReactNode {
     case 'ai':
     case 'star':
       return <IconSparkleRegular size={size} />
+    case 'folder':
+      return <IconFolderCloseRegular size={size} />
+    case 'database':
+    case 'db':
+      return <IconDatabaseOutlineRegular size={size} />
+    case 'word':
+    case 'doc':
+    case 'document':
+      return <FileTypeIcon kind="word" size={size} />
+    case 'excel':
+    case 'sheet':
+      return <FileTypeIcon kind="excel" size={size} />
+    case 'pdf':
+      return <FileTypeIcon kind="pdf" size={size} />
+    case 'code':
+      return <FileTypeIcon kind="code" size={size} />
+    case 'file':
+      return <FileTypeIcon kind="other" size={size} />
     default:
       return null
   }
@@ -96,7 +117,7 @@ function parsePercent(val: unknown): number {
 }
 
 /**
- * Parse simple inline markdown formatting (**bold**, `code`, *italic*) and status icons.
+ * Parse simple inline markdown formatting (**bold**, `code`, *italic*, [link](url)) and status icons.
  */
 function renderFormattedText(text: string): ReactNode {
   if (!text) return null
@@ -104,12 +125,13 @@ function renderFormattedText(text: string): ReactNode {
     !text.includes('**') &&
     !text.includes('`') &&
     !text.includes('*') &&
+    !text.includes('[') &&
     !/[✅❌✓✗]|:check:|:cross:|:x:/u.test(text)
   ) {
     return text
   }
 
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|[✅✓]|:check:|[❌✗]|:cross:|:x:)/gu
+  const regex = /(`[^`]+`|\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|[✅✓]|:check:|[❌✗]|:cross:|:x:)/gu
   const parts: ReactNode[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null = regex.exec(text)
@@ -122,6 +144,23 @@ function renderFormattedText(text: string): ReactNode {
     const key = match.index
     if (token.startsWith('`') && token.endsWith('`')) {
       parts.push(<code key={key} className={css.inlineCode}>{token.slice(1, -1)}</code>)
+    } else if (token.startsWith('[') && token.includes('](') && token.endsWith(')')) {
+      const linkMatch = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(token)
+      if (linkMatch && linkMatch[1] && linkMatch[2]) {
+        parts.push(
+          <a
+            key={key}
+            href={linkMatch[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={css.cardLink}
+          >
+            {linkMatch[1]}
+          </a>,
+        )
+      } else {
+        parts.push(token)
+      }
     } else if (token.startsWith('**') && token.endsWith('**')) {
       parts.push(<strong key={key} className={css.strong}>{token.slice(2, -2)}</strong>)
     } else if (token.startsWith('*') && token.endsWith('*')) {
@@ -203,8 +242,17 @@ function renderBadge(data: Record<string, unknown>): ReactNode {
   )
 }
 
-function renderCard(data: Record<string, unknown>): ReactNode {
+interface CardProps {
+  data: Record<string, unknown>
+  insideLayout?: boolean | undefined
+}
+
+function CardComponent({ data, insideLayout = false }: CardProps): ReactNode {
   const variant = typeof data.variant === 'string' ? data.variant : 'neutral'
+  const isCollapsible = data.collapsible === true || data.accordion === true || data.expandable === true
+  const defaultOpen = data.defaultOpen === true || data.open === true
+  const [open, setOpen] = useState(isCollapsible ? defaultOpen : true)
+
   const iconStr = typeof data.icon === 'string' ? data.icon : undefined
   const icon = renderNamedIcon(iconStr, 16) ?? defaultVariantIcon(variant)
   const title = typeof data.title === 'string' ? data.title : undefined
@@ -212,21 +260,143 @@ function renderCard(data: Record<string, unknown>): ReactNode {
   const items = Array.isArray(data.items)
     ? data.items.filter((item): item is string => typeof item === 'string')
     : undefined
+  const fullWidth = data.fullWidth === true
+
+  // Render card header badge if present
+  let badgeNode: ReactNode = null
+  if (typeof data.badge === 'string' && data.badge.trim() !== '') {
+    badgeNode = (
+      <span className={css.cardBadge} data-variant={variant}>
+        {renderFormattedText(data.badge)}
+      </span>
+    )
+  } else if (typeof data.badge === 'object' && data.badge !== null) {
+    const badgeObj = data.badge as Record<string, unknown>
+    const badgeText = typeof badgeObj.text === 'string' ? badgeObj.text : ''
+    const badgeVariant = typeof badgeObj.variant === 'string' ? badgeObj.variant : variant
+    if (badgeText) {
+      badgeNode = (
+        <span className={css.cardBadge} data-variant={badgeVariant}>
+          {renderFormattedText(badgeText)}
+        </span>
+      )
+    }
+  }
+
+  const hasBodyContent = Boolean(description || (items && items.length > 0))
 
   return (
-    <div className={clsx(css.container, css.cardRoot)} data-variant={variant}>
-      <div className={css.cardHeader}>
-        {icon && <span className={css.cardIcon}>{icon}</span>}
-        {title && <span className={css.cardTitle}>{renderFormattedText(title)}</span>}
-      </div>
-      {description && <div className={css.cardDesc}>{renderFormattedText(description)}</div>}
-      {items && items.length > 0 && (
-        <ul className={css.cardList}>
-          {items.map((item, idx) => (
-            <li key={idx}>{renderFormattedText(item)}</li>
-          ))}
-        </ul>
+    <div
+      className={clsx(insideLayout ? css.cardRoot : clsx(css.container, css.cardRoot))}
+      data-variant={variant}
+      data-full-width={fullWidth ? 'true' : undefined}
+    >
+      {isCollapsible ? (
+        <button
+          type="button"
+          className={css.cardToggleHeader}
+          aria-expanded={open}
+          onClick={() => { setOpen(prev => !prev) }}
+        >
+          {icon && <span className={css.cardIcon}>{icon}</span>}
+          {title && <span className={css.cardTitle}>{renderFormattedText(title)}</span>}
+          {badgeNode}
+          <IconChevronDownOutlineRegular
+            size={14}
+            className={clsx(css.cardChevron, open && css.cardChevronOpen)}
+          />
+        </button>
+      ) : (
+        <div className={css.cardHeader}>
+          {icon && <span className={css.cardIcon}>{icon}</span>}
+          {title && <span className={css.cardTitle}>{renderFormattedText(title)}</span>}
+          {badgeNode}
+        </div>
       )}
+
+      {open && hasBodyContent && (
+        <div className={css.cardBody}>
+          {description && <div className={css.cardDesc}>{renderFormattedText(description)}</div>}
+          {items && items.length > 0 && (
+            <ul className={css.cardList}>
+              {items.map((item, idx) => (
+                <li key={idx}>{renderFormattedText(item)}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function renderCard(data: Record<string, unknown>): ReactNode {
+  return <CardComponent data={data} />
+}
+
+/**
+ * Intelligent content-aware layout decider.
+ * Ensures reading flow and avoids awkward 2-column squishing for heavy text or wide tables.
+ */
+function determineLayout(
+  layoutProp: unknown,
+  cards: Record<string, unknown>[],
+): 'stack' | 'split' | 'grid' {
+  if (typeof layoutProp === 'string') {
+    const norm = layoutProp.toLowerCase().trim()
+    if (norm === 'stack' || norm === 'full-width' || norm === 'full') return 'stack'
+    if (norm === 'grid') return 'grid'
+    if (norm === 'split' || norm === '2-column' || norm === 'columns') return 'split'
+  }
+
+  // Automatic content-aware evaluation
+  if (cards.length === 2) {
+    const isHeavy = (c: Record<string, unknown>) => {
+      const desc = typeof c.description === 'string' ? c.description : ''
+      const items = Array.isArray(c.items) ? c.items : []
+      const hasLongItem = items.some(it => typeof it === 'string' && it.length > 110)
+      return desc.length > 180 || items.length > 4 || hasLongItem
+    }
+    // If either card has long content or many items, keep them in a clean stack
+    if (cards.some(isHeavy)) {
+      return 'stack'
+    }
+    // Both cards are concise -> ideal for split 2-column view on capable displays
+    return 'split'
+  }
+
+  if (cards.length >= 3 && cards.length <= 6) {
+    const isCompact = cards.every((c) => {
+      const desc = typeof c.description === 'string' ? c.description : ''
+      const items = Array.isArray(c.items) ? c.items : []
+      return desc.length < 100 && items.length <= 3
+    })
+    if (isCompact) return 'grid'
+  }
+
+  return 'stack'
+}
+
+function renderLayoutComponent(data: Record<string, unknown>): ReactNode {
+  const rawItems = Array.isArray(data.items)
+    ? data.items
+    : Array.isArray(data.cards)
+      ? data.cards
+      : []
+
+  const cards = rawItems.filter((it): it is Record<string, unknown> => typeof it === 'object' && it !== null)
+  if (cards.length === 0) return null
+
+  const layout = determineLayout(data.layout ?? data.type, cards)
+  const ratio = typeof data.ratio === 'string' ? data.ratio : undefined
+
+  return (
+    <div className={css.layoutContainer}>
+      <div className={css.layoutInner} data-layout={layout} data-ratio={ratio}>
+        {cards.map((cardData, idx) => (
+          <CardComponent key={idx} data={cardData} insideLayout={true} />
+        ))}
+      </div>
     </div>
   )
 }
@@ -338,14 +508,21 @@ export function renderUiComponent(type: string, rawJson: string): ReactNode | nu
     case 'alert':
     case 'notice':
       return renderCard(record)
+    case 'cards':
+    case 'layout':
+    case 'group':
+      return renderLayoutComponent(record)
     case 'metric':
     case 'metrics':
     case 'stat':
     case 'stats':
       return renderMetrics(record)
     case 'table':
-    case 'grid':
       return renderTableComponent(record)
+    case 'grid':
+      return Array.isArray(record.headers)
+        ? renderTableComponent(record)
+        : renderLayoutComponent(record)
     default:
       return null
   }

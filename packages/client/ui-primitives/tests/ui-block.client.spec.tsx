@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MarkdownText } from './markdown-test-components.tsx'
 
@@ -151,6 +151,104 @@ describe('MarkdownText Rich UI blocks', () => {
     expect(screen.getByText('RAM')).toBeTruthy()
     expect(screen.getByText('82%')).toBeTruthy()
     expect(screen.getByText('+5%')).toBeTruthy()
+  })
+
+  it('renders neutral card with badge and file links', () => {
+    const md = [
+      '```ui:card',
+      JSON.stringify({
+        title: 'Báo cáo Word đã tạo',
+        variant: 'success',
+        badge: 'Sẵn sàng',
+        description: 'Xem mã nguồn tại [GitHub ↗](https://github.com/example/repo)',
+      }),
+      '```',
+    ].join('\n')
+
+    const { container } = render(<MarkdownText text={md} />)
+    expect(screen.getByText('Báo cáo Word đã tạo')).toBeTruthy()
+    expect(screen.getByText('Sẵn sàng')).toBeTruthy()
+
+    const link = container.querySelector('a')
+    expect(link).toBeTruthy()
+    expect(link?.getAttribute('href')).toBe('https://github.com/example/repo')
+    expect(link?.textContent).toBe('GitHub ↗')
+  })
+
+  it('renders collapsible card and toggles open/close on header click', () => {
+    const md = [
+      '```ui:card',
+      JSON.stringify({
+        title: 'Chi tiết kỹ thuật và đường dẫn',
+        variant: 'neutral',
+        collapsible: true,
+        defaultOpen: false,
+        icon: 'folder',
+        items: ['D:\\Workspace\\path\\to\\project'],
+      }),
+      '```',
+    ].join('\n')
+
+    const { container } = render(<MarkdownText text={md} />)
+    expect(screen.getByText('Chi tiết kỹ thuật và đường dẫn')).toBeTruthy()
+
+    const toggleBtn = container.querySelector('button[aria-expanded]')
+    expect(toggleBtn).toBeTruthy()
+    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('false')
+    // Body is hidden initially
+    expect(screen.queryByText('D:\\Workspace\\path\\to\\project')).toBeNull()
+
+    // Click to expand
+    if (toggleBtn) fireEvent.click(toggleBtn)
+    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByText('D:\\Workspace\\path\\to\\project')).toBeTruthy()
+
+    // Click to collapse again
+    if (toggleBtn) fireEvent.click(toggleBtn)
+    expect(toggleBtn?.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByText('D:\\Workspace\\path\\to\\project')).toBeNull()
+  })
+
+  it('renders ui:cards with adaptive layout', () => {
+    const md = [
+      '```ui:cards',
+      JSON.stringify({
+        layout: 'split',
+        items: [
+          { title: 'Card Trái', variant: 'info', description: 'Nội dung ngắn gọn' },
+          { title: 'Card Phải', variant: 'success', description: 'Hoàn tất' },
+        ],
+      }),
+      '```',
+    ].join('\n')
+
+    const { container } = render(<MarkdownText text={md} />)
+    expect(screen.getByText('Card Trái')).toBeTruthy()
+    expect(screen.getByText('Card Phải')).toBeTruthy()
+
+    const layoutInner = container.querySelector('[data-layout="split"]')
+    expect(layoutInner).toBeTruthy()
+  })
+
+  it('automatically keeps heavy cards in a stack layout even if 2 items', () => {
+    const md = [
+      '```ui:cards',
+      JSON.stringify({
+        items: [
+          {
+            title: 'Card Nặng',
+            variant: 'warning',
+            description: 'Nội dung rất dài '.repeat(20),
+          },
+          { title: 'Card Phụ', variant: 'neutral', description: 'Ngắn' },
+        ],
+      }),
+      '```',
+    ].join('\n')
+
+    const { container } = render(<MarkdownText text={md} />)
+    const layoutInner = container.querySelector('[data-layout="stack"]')
+    expect(layoutInner).toBeTruthy()
   })
 
   it('gracefully falls back to standard code block on malformed JSON', () => {
