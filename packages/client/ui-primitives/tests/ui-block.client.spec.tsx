@@ -110,6 +110,34 @@ describe('MarkdownText Rich UI blocks', () => {
     expect(closeIcon?.querySelector('svg')).toBeTruthy()
   })
 
+  it('renders pin, warning, info, sparkle, and clock status SVG icons for symbols', () => {
+    const md = [
+      '📌 **Lưu ý**: Đây là ⚠️ cảnh báo quan trọng, ℹ️ thông tin thêm, ✨ gợi ý AI và ⏰ thời gian.',
+    ].join('\n')
+
+    const { container } = render(<MarkdownText text={md} />)
+    const pinIcon = container.querySelector('[data-status="pin"]')
+    const warnIcon = container.querySelector('[data-status="warn"]')
+    const infoIcon = container.querySelector('[data-status="info"]')
+    const sparkleIcon = container.querySelector('[data-status="sparkle"]')
+    const clockIcon = container.querySelector('[data-status="clock"]')
+
+    expect(pinIcon).toBeTruthy()
+    expect(pinIcon?.querySelector('svg')).toBeTruthy()
+
+    expect(warnIcon).toBeTruthy()
+    expect(warnIcon?.querySelector('svg')).toBeTruthy()
+
+    expect(infoIcon).toBeTruthy()
+    expect(infoIcon?.querySelector('svg')).toBeTruthy()
+
+    expect(sparkleIcon).toBeTruthy()
+    expect(sparkleIcon?.querySelector('svg')).toBeTruthy()
+
+    expect(clockIcon).toBeTruthy()
+    expect(clockIcon?.querySelector('svg')).toBeTruthy()
+  })
+
   it('renders ui:table as a styled dashboard table with formatted cells', () => {
     const md = [
       '```ui:table',

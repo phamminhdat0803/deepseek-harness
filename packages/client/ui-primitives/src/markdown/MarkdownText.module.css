@@ -296,6 +296,30 @@
   color: var(--dsw-alias-state-danger-primary, #ef4444);
 }
 
+.inlineStatusIcon[data-status='warn'] {
+  color: var(--dsw-alias-state-warn-primary, #f59e0b);
+}
+
+.inlineStatusIcon[data-status='pin'] {
+  color: #e11d48;
+}
+
+:global(body[data-ds-dark-theme]) .inlineStatusIcon[data-status='pin'] {
+  color: #fb7185;
+}
+
+.inlineStatusIcon[data-status='info'] {
+  color: var(--dsw-alias-state-business-primary, #3b82f6);
+}
+
+.inlineStatusIcon[data-status='sparkle'] {
+  color: var(--dsw-alias-state-warn-primary, #f59e0b);
+}
+
+.inlineStatusIcon[data-status='clock'] {
+  color: var(--dsw-alias-label-secondary, #71717a);
+}
+
 .markdown > *:first-child,
 .markdown p:first-child {
   margin-top: 0 !important;

@@ -4,7 +4,8 @@ import clsx from 'clsx'
 import {
   IconCheckCircleFillRegular, IconChevronDownOutlineRegular, IconCloseCircleFillRegular,
   IconClockOutlineRegular, IconDatabaseOutlineRegular, IconFolderCloseRegular,
-  IconInfoOutlineRegular, IconSparkleRegular, IconWarningTriangleOutlineRegular,
+  IconInfoOutlineRegular, IconPinFillRegular, IconPinOutlineRegular, IconSparkleRegular,
+  IconWarningTriangleOutlineRegular,
 } from '../icons/index.tsx'
 import { FileTypeIcon } from '../FileTypeIcon.tsx'
 import { StateDot } from '../StateDot.tsx'
@@ -45,6 +46,9 @@ function renderNamedIcon(name: string | undefined, size = 16): ReactNode {
     case 'check':
     case 'success':
     case 'done':
+    case '✅':
+    case '✓':
+    case '✔':
       return <IconCheckCircleFillRegular size={size} />
     case 'close':
     case 'cross':
@@ -53,20 +57,42 @@ function renderNamedIcon(name: string | undefined, size = 16): ReactNode {
     case 'error':
     case 'danger':
     case 'cancel':
+    case '❌':
+    case '✗':
+    case '✖':
       return <IconCloseCircleFillRegular size={size} />
     case 'warning':
     case 'alert':
     case 'warn':
+    case '⚠️':
+    case '⚠':
       return <IconWarningTriangleOutlineRegular size={size} />
+    case 'pin':
+    case 'pin-fill':
+    case '📌':
+    case '📍':
+      return <IconPinFillRegular size={size} />
+    case 'pin-outline':
+      return <IconPinOutlineRegular size={size} />
     case 'info':
+    case 'ℹ️':
+    case 'ℹ':
       return <IconInfoOutlineRegular size={size} />
     case 'clock':
     case 'time':
     case 'pending':
+    case '🕒':
+    case '⏰':
+    case '⏱️':
+    case '⏱':
+    case '⏳':
       return <IconClockOutlineRegular size={size} />
     case 'sparkle':
     case 'ai':
     case 'star':
+    case '✨':
+    case '⭐':
+    case '🌟':
       return <IconSparkleRegular size={size} />
     case 'folder':
       return <IconFolderCloseRegular size={size} />
@@ -116,6 +142,30 @@ function parsePercent(val: unknown): number {
   return 0
 }
 
+const STATUS_SYMBOL_REGEX = new RegExp([
+  '📌|📍|:pin:',
+  '⚠️|⚠|:warning:|:warn:|:alert:',
+  'ℹ️|ℹ|:info:',
+  '✨|⭐|🌟|:sparkle:|:star:',
+  '🕒|⏰|⏱️|⏱|⏳|:clock:|:time:',
+  '✅|✓|✔|:check:',
+  '❌|✗|✖|:cross:|:x:',
+].join('|'), 'u')
+
+const FORMAT_TOKEN_REGEX = new RegExp([
+  '`[^`]+`',
+  '\\[[^\\]]+\\]\\([^)]+\\)',
+  '\\*\\*[^*]+\\*\\*',
+  '\\*[^*]+\\*',
+  '📌|📍|:pin:',
+  '⚠️|⚠|:warning:|:warn:|:alert:',
+  'ℹ️|ℹ|:info:',
+  '✨|⭐|🌟|:sparkle:|:star:',
+  '🕒|⏰|⏱️|⏱|⏳|:clock:|:time:',
+  '✅|✓|✔|:check:',
+  '❌|✗|✖|:cross:|:x:',
+].join('|'), 'gu')
+
 /**
  * Parse simple inline markdown formatting (**bold**, `code`, *italic*, [link](url)) and status icons.
  */
@@ -126,15 +176,15 @@ function renderFormattedText(text: string): ReactNode {
     !text.includes('`') &&
     !text.includes('*') &&
     !text.includes('[') &&
-    !/[✅❌✓✗]|:check:|:cross:|:x:/u.test(text)
+    !STATUS_SYMBOL_REGEX.test(text)
   ) {
     return text
   }
 
-  const regex = /(`[^`]+`|\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|[✅✓]|:check:|[❌✗]|:cross:|:x:)/gu
   const parts: ReactNode[] = []
   let lastIndex = 0
-  let match: RegExpExecArray | null = regex.exec(text)
+  FORMAT_TOKEN_REGEX.lastIndex = 0
+  let match: RegExpExecArray | null = FORMAT_TOKEN_REGEX.exec(text)
 
   while (match !== null) {
     if (match.index > lastIndex) {
@@ -165,23 +215,53 @@ function renderFormattedText(text: string): ReactNode {
       parts.push(<strong key={key} className={css.strong}>{token.slice(2, -2)}</strong>)
     } else if (token.startsWith('*') && token.endsWith('*')) {
       parts.push(<em key={key}>{token.slice(1, -1)}</em>)
-    } else if (token === '✅' || token === '✓' || token === ':check:') {
+    } else if (token === '✅' || token === '✓' || token === '✔' || token === ':check:') {
       parts.push(
         <span key={key} className={css.inlineStatusIcon} data-status="check" title="Thành công / Cho phép">
           <IconCheckCircleFillRegular size={14} />
         </span>,
       )
-    } else if (token === '❌' || token === '✗' || token === ':cross:' || token === ':x:') {
+    } else if (token === '❌' || token === '✗' || token === '✖' || token === ':cross:' || token === ':x:') {
       parts.push(
         <span key={key} className={css.inlineStatusIcon} data-status="close" title="Thất bại / Chặn">
           <IconCloseCircleFillRegular size={14} />
         </span>,
       )
+    } else if (token === '⚠️' || token === '⚠' || token === ':warning:' || token === ':warn:' || token === ':alert:') {
+      parts.push(
+        <span key={key} className={css.inlineStatusIcon} data-status="warn" title="Cảnh báo / Lưu ý">
+          <IconWarningTriangleOutlineRegular size={14} />
+        </span>,
+      )
+    } else if (token === '📌' || token === '📍' || token === ':pin:') {
+      parts.push(
+        <span key={key} className={css.inlineStatusIcon} data-status="pin" title="Ghim / Mục tiêu">
+          <IconPinFillRegular size={14} />
+        </span>,
+      )
+    } else if (token === 'ℹ️' || token === 'ℹ' || token === ':info:') {
+      parts.push(
+        <span key={key} className={css.inlineStatusIcon} data-status="info" title="Thông tin">
+          <IconInfoOutlineRegular size={14} />
+        </span>,
+      )
+    } else if (token === '✨' || token === '⭐' || token === '🌟' || token === ':sparkle:' || token === ':star:') {
+      parts.push(
+        <span key={key} className={css.inlineStatusIcon} data-status="sparkle" title="Nổi bật / AI">
+          <IconSparkleRegular size={14} />
+        </span>,
+      )
+    } else if (token === '🕒' || token === '⏰' || token === '⏱️' || token === '⏱' || token === '⏳' || token === ':clock:' || token === ':time:') {
+      parts.push(
+        <span key={key} className={css.inlineStatusIcon} data-status="clock" title="Thời gian / Chờ">
+          <IconClockOutlineRegular size={14} />
+        </span>,
+      )
     } else {
       parts.push(token)
     }
-    lastIndex = regex.lastIndex
-    match = regex.exec(text)
+    lastIndex = FORMAT_TOKEN_REGEX.lastIndex
+    match = FORMAT_TOKEN_REGEX.exec(text)
   }
 
   if (lastIndex < text.length) {
