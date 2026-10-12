@@ -279,6 +279,44 @@ describe('MarkdownText Rich UI blocks', () => {
     expect(layoutInner).toBeTruthy()
   })
 
+  it('renders ui:list as IconTextList with rounded icon boxes and dividers', () => {
+    const md = [
+      '```ui:list',
+      JSON.stringify({
+        title: 'Danh sách vấn đề cần tối ưu',
+        items: [
+          {
+            icon: 'warning',
+            variant: 'warning',
+            title: 'Vấn đề 1 — Phân bố tin nhắn lệch trái',
+            description: 'Mô tả chi tiết vấn đề 1.',
+            badge: 'Ưu tiên cao',
+          },
+          {
+            icon: 'light',
+            variant: 'info',
+            title: 'Vấn đề 2 — Typography chưa tinh tế',
+            description: 'Mô tả chi tiết vấn đề 2.',
+            meta: 'Gợi ý',
+          },
+        ],
+      }),
+      '```',
+    ].join('\n')
+
+    const { container } = render(<MarkdownText text={md} />)
+    expect(screen.getByText('Danh sách vấn đề cần tối ưu')).toBeTruthy()
+    expect(screen.getByText('Vấn đề 1 — Phân bố tin nhắn lệch trái')).toBeTruthy()
+    expect(screen.getByText('Mô tả chi tiết vấn đề 1.')).toBeTruthy()
+    expect(screen.getByText('Ưu tiên cao')).toBeTruthy()
+    expect(screen.getByText('Vấn đề 2 — Typography chưa tinh tế')).toBeTruthy()
+    expect(screen.getByText('Gợi ý')).toBeTruthy()
+
+    const warningBox = container.querySelector('[data-variant="warning"]')
+    expect(warningBox).toBeTruthy()
+    expect(warningBox?.querySelector('svg')).toBeTruthy()
+  })
+
   it('gracefully falls back to standard code block on malformed JSON', () => {
     const md = [
       '```ui:progress',

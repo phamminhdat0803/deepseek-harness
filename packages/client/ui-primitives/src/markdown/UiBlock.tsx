@@ -2,10 +2,11 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import clsx from 'clsx'
 import {
-  IconCheckCircleFillRegular, IconChevronDownOutlineRegular, IconCloseCircleFillRegular,
-  IconClockOutlineRegular, IconDatabaseOutlineRegular, IconFolderCloseRegular,
-  IconInfoOutlineRegular, IconPinFillRegular, IconPinOutlineRegular, IconSparkleRegular,
-  IconWarningTriangleOutlineRegular,
+  IconCheckCircleFillRegular, IconChecklistOutlineRegular, IconChevronDownOutlineRegular,
+  IconCloseCircleFillRegular, IconClockOutlineRegular, IconDatabaseOutlineRegular,
+  IconFolderCloseRegular, IconGoalOutlineRegular, IconInfoOutlineRegular,
+  IconInspectOutlineRegular, IconLightOutlineRegular, IconPinFillRegular,
+  IconPinOutlineRegular, IconSparkleRegular, IconWarningTriangleOutlineRegular,
 } from '../icons/index.tsx'
 import { FileTypeIcon } from '../FileTypeIcon.tsx'
 import { StateDot } from '../StateDot.tsx'
@@ -94,6 +95,28 @@ function renderNamedIcon(name: string | undefined, size = 16): ReactNode {
     case '⭐':
     case '🌟':
       return <IconSparkleRegular size={size} />
+    case 'light':
+    case 'bulb':
+    case 'idea':
+    case '💡':
+      return <IconLightOutlineRegular size={size} />
+    case 'goal':
+    case 'target':
+    case '🎯':
+      return <IconGoalOutlineRegular size={size} />
+    case 'inspect':
+    case 'search':
+    case 'find':
+    case '🔍':
+    case '🔎':
+      return <IconInspectOutlineRegular size={size} />
+    case 'checklist':
+    case 'list':
+    case 'todo':
+    case 'task':
+    case '📋':
+    case '📝':
+      return <IconChecklistOutlineRegular size={size} />
     case 'folder':
       return <IconFolderCloseRegular size={size} />
     case 'database':
@@ -560,6 +583,99 @@ function renderTableComponent(data: Record<string, unknown>): ReactNode {
   )
 }
 
+interface IconTextListItem {
+  title?: string
+  description?: string
+  desc?: string
+  text?: string
+  icon?: string
+  variant?: string
+  badge?: string | { text: string; variant?: string }
+  meta?: string
+}
+
+function renderIconTextListComponent(data: Record<string, unknown>): ReactNode {
+  const rawItems = Array.isArray(data.items)
+    ? data.items
+    : Array.isArray(data.rows)
+      ? data.rows
+      : []
+
+  if (rawItems.length === 0) return null
+  const title = typeof data.title === 'string' ? data.title : undefined
+
+  return (
+    <div className={css.iconListRoot}>
+      {title && <div className={css.iconListTitle}>{renderFormattedText(title)}</div>}
+      <div className={css.iconListItems}>
+        {rawItems.map((rawItem, idx) => {
+          let item: IconTextListItem
+          if (typeof rawItem === 'string') {
+            item = { title: rawItem }
+          } else if (typeof rawItem === 'object' && rawItem !== null) {
+            item = rawItem as IconTextListItem
+          } else {
+            return null
+          }
+
+          const itemTitle = typeof item.title === 'string' ? item.title : undefined
+          const itemDesc = typeof item.description === 'string'
+            ? item.description
+            : typeof item.desc === 'string'
+              ? item.desc
+              : typeof item.text === 'string'
+                ? item.text
+                : undefined
+
+          const variant = typeof item.variant === 'string' ? item.variant : undefined
+          const iconStr = typeof item.icon === 'string' ? item.icon : undefined
+          const icon = renderNamedIcon(iconStr, 18) ?? defaultVariantIcon(variant)
+
+          let badgeNode: ReactNode = null
+          if (typeof item.badge === 'string' && item.badge.trim() !== '') {
+            badgeNode = (
+              <span className={css.cardBadge} data-variant={variant ?? 'neutral'}>
+                {renderFormattedText(item.badge)}
+              </span>
+            )
+          } else if (typeof item.badge === 'object') {
+            const badgeObj = item.badge as Record<string, unknown>
+            const badgeText = typeof badgeObj.text === 'string' ? badgeObj.text : ''
+            const badgeVar = typeof badgeObj.variant === 'string' ? badgeObj.variant : (variant ?? 'neutral')
+            if (badgeText) {
+              badgeNode = (
+                <span className={css.cardBadge} data-variant={badgeVar}>
+                  {renderFormattedText(badgeText)}
+                </span>
+              )
+            }
+          }
+
+          const metaText = typeof item.meta === 'string' ? item.meta : undefined
+
+          return (
+            <div key={idx} className={css.iconListItem}>
+              {icon && (
+                <div className={css.iconListBox} data-variant={variant ?? 'neutral'}>
+                  {icon}
+                </div>
+              )}
+              <div className={css.iconListContent}>
+                <div className={css.iconListHeader}>
+                  {itemTitle && <div className={css.iconListItemTitle}>{renderFormattedText(itemTitle)}</div>}
+                  {badgeNode}
+                  {metaText && <span className={css.iconListMeta}>{renderFormattedText(metaText)}</span>}
+                </div>
+                {itemDesc && <div className={css.iconListItemDesc}>{renderFormattedText(itemDesc)}</div>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 /**
  * Render a UI component from a structured JSON code block (e.g. ```ui:progress).
  * Returns null if the JSON is malformed or the component type is unrecognized,
@@ -573,9 +689,9 @@ export function renderUiComponent(type: string, rawJson: string): ReactNode | nu
     return null
   }
 
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null
+  if (typeof parsed !== 'object' || parsed === null) return null
 
-  const record = parsed as Record<string, unknown>
+  const record = Array.isArray(parsed) ? { items: parsed } : (parsed as Record<string, unknown>)
   const normalizedType = type.toLowerCase().replace(/^ui[:-]/, '')
 
   switch (normalizedType) {
@@ -603,6 +719,14 @@ export function renderUiComponent(type: string, rawJson: string): ReactNode | nu
       return Array.isArray(record.headers)
         ? renderTableComponent(record)
         : renderLayoutComponent(record)
+    case 'list':
+    case 'icon-list':
+    case 'icontextlist':
+    case 'rich-list':
+    case 'feature-list':
+    case 'media-list':
+    case 'items':
+      return renderIconTextListComponent(record)
     default:
       return null
   }
