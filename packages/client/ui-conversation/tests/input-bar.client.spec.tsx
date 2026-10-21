@@ -1780,10 +1780,21 @@ describe('strips and variants', () => {
     expect(view.queryByRole('alert')).toBeNull()
   })
 
-  it('hero variant adds the hero class and accessory row renders', () => {
+  it('hero variant adds the hero class and renders the accessory as the tray hint row', () => {
     const { view } = bench({ variant: 'hero', accessory: <i data-testid="acc" /> })
-    expect(view.getByTestId('acc')).toBeTruthy()
+    const acc = view.getByTestId('acc')
+    const card = view.container.querySelector('[data-composer-card]')!
+    expect(acc).toBeTruthy()
     expect(view.container.querySelector('[class*="hero"]')).not.toBeNull()
+    // The hint row sits on the tray above the card, outside the field itself.
+    expect(acc.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(card.contains(acc)).toBe(false)
+  })
+
+  it('keeps the docked accessory inside the card, above the draft', () => {
+    const { view } = bench({ accessory: <i data-testid="acc" /> })
+    const card = view.container.querySelector('[data-composer-card]')!
+    expect(card.contains(view.getByTestId('acc'))).toBe(true)
   })
 
   it('renders overlay, left/right, and footer slots at their layout positions', () => {
@@ -1890,6 +1901,49 @@ it('lets a toolbar activity replace accessories without replacing the draft edit
   expect(view.getByRole('button', { name: '发送消息' })).toBeTruthy()
   fireEvent.click(view.getByRole('button', { name: 'close activity' }))
   expect(view.getByRole('button', { name: 'model choice' })).toBeTruthy()
+})
+
+describe('blank-session starter chips', () => {
+  const groupName = zh['hero.suggestions.label']
+
+  it('adopts the picked prompt as the draft, hands the keyboard to the editor, and keeps the row in place', () => {
+    const { view, shell, textarea } = bench({ variant: 'hero' })
+    expect(view.getByRole('group', { name: groupName })).toBeDefined()
+
+    fireEvent.click(view.getByRole('button', { name: zh['hero.suggestion.build'] }))
+
+    expect(shell.snapshot.draft).toBe(zh['hero.suggestion.build.prompt'])
+    expect(document.activeElement).toBe(textarea)
+    // The row leaves the accessibility tree without leaving the layout: the
+    // hero stack keeps its height, so the composer does not move.
+    expect(view.queryByRole('group', { name: groupName })).toBeNull()
+    expect(view.container.querySelector('[role="group"]')).not.toBeNull()
+    expect(view.getByRole('button', { name: '发送消息' })).toBeTruthy()
+  })
+
+  it('stays out of the docked composer and off a locked bar', () => {
+    expect(bench({ variant: 'composer' }).view.queryByRole('group', { name: groupName })).toBeNull()
+    cleanup()
+    expect(bench({ variant: 'hero', inert: true }).view.queryByRole('group', { name: groupName })).toBeNull()
+  })
+
+  it('hides the row in place for a typed draft and a pending attachment', () => {
+    const typed = bench({ variant: 'hero', draft: 'typed draft' })
+    expect(typed.view.queryByRole('group', { name: groupName })).toBeNull()
+    expect(typed.view.container.querySelector('[role="group"]')).not.toBeNull()
+    cleanup()
+    const attached = bench({
+      variant: 'hero',
+      attachments: [{
+        kind: 'image',
+        id: 'a1' as DraftAttachmentId,
+        file: new File([new Uint8Array([1, 2, 3])], 'shot.png', { type: 'image/png' }),
+        previewUrl: 'blob:shot',
+      }],
+    })
+    expect(attached.view.queryByRole('group', { name: groupName })).toBeNull()
+    expect(attached.view.container.querySelector('[role="group"]')).not.toBeNull()
+  })
 })
 
 it('places context usage below the composer and hides it until the activity closes', () => {

@@ -145,6 +145,9 @@ export function ConversationContent(props: ConversationContentProps) {
   const blocked = !inert && composerBlock !== undefined
   const inputBar = renderSlot('conversation.composer.bar', {
     variant: hero ? 'hero' : 'composer',
+    // The hero row rides the composer bar as its accessory so the hint row and
+    // the card share one tray; composed here, where these slots are authorized.
+    ...(hero ? { accessory: heroWorkspaceRow } : {}),
     ...(inert
       ? {
         disabled: true,
@@ -163,7 +166,6 @@ export function ConversationContent(props: ConversationContentProps) {
   const composerBar = (
     <div className={clsx(css.composerStack, hero && css.composerHero)}>
       {hero && <HeroShell t={t} renderSlot={renderSlot} />}
-      {hero && heroWorkspaceRow}
       {zone !== undefined && renderSlot('conversation.input.dock', zone)}
       {inputBar}
     </div>

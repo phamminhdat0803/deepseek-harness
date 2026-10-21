@@ -132,6 +132,23 @@ function HeroFish({ hovering }: { hovering: boolean }) {
 }
 
 /**
+ * The hero orb: a soft gradient sphere above the title. Decorative artwork,
+ * hidden from the accessibility tree. Two layers carry the look: a blurred
+ * conic plume painting past the circle (the fuzzy edge) and the sphere itself,
+ * whose plumes swirl on one slow rotation. Reduced motion keeps the same
+ * artwork with both layers at rest.
+ * @returns the orb element tree.
+ */
+function HeroOrb() {
+  return (
+    <span className={css.orbWrap} aria-hidden="true">
+      <span className={css.orbGlow} />
+      <span className={css.orb} />
+    </span>
+  )
+}
+
+/**
  * Render the hero chrome (headline only; no composer, no workspace row).
  * @param props - see {@link HeroShellProps}.
  * @returns the centered hero element tree.
@@ -141,6 +158,7 @@ export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
   return (
     <div className={css.root}>
       <div className={css.stack}>
+        <HeroOrb />
         <div className={css.headline}>
           {/* Headline mark: sized against the heading-lg rung in HeroShell. */}
           <span

@@ -398,6 +398,20 @@ describe('Hero chrome', () => {
     expect(brandMarkOwner.className).toBeTypeOf('string')
     expect(renderSlot.mock.calls[0]?.[2]?.fallback).toBeTruthy()
   })
+
+  it('paints the orb above the title as decoration, out of the accessibility tree', () => {
+    const renderSlot = vi.fn<HeroShellProps['renderSlot']>(() => null)
+    const view = render(<HeroShell t={makeTranslate(en, commonEn)} renderSlot={renderSlot} />)
+    const orb = view.container.querySelector('[class*="orbWrap"]')
+    expect(orb).not.toBeNull()
+    expect(orb?.getAttribute('aria-hidden')).toBe('true')
+    // Decoration only: no text, no role, nothing for the reader to land on.
+    expect(orb?.textContent).toBe('')
+    expect(view.queryByRole('img')).toBeNull()
+    // Above the title in the stack, so the headline stays the first text.
+    const headline = view.getByText('Into the Unknown')
+    expect(orb!.compareDocumentPosition(headline) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })
 
 describe('ConversationRoot resident composer', () => {

@@ -23,6 +23,115 @@
   overflow: visible;
 }
 
+/* Hero orb (reference ai-chat-v2): the pastel sphere above the title. The wrap
+   is a size box; the artwork is three layers — a soft aura painting past the
+   circle, the sphere's plume field, and its halo. The sphere masks its own
+   edge so the colours dissolve into the page instead of ending on a disc edge.
+   Palette tokens are owned by ui-theme (hero-orb.css). */
+.orbWrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  flex: none;
+  width: 148px;
+  height: 148px;
+  /* The artwork masks its own edge, so the ball ends ~16px inside this box;
+     the extra seat puts the visible gap to the title at the reference's ~60px
+     rather than the stack's own 12px. */
+  margin-bottom: 32px;
+}
+
+.orbGlow {
+  position: absolute;
+  inset: -11%;
+  border-radius: 50%;
+  corner-shape: round;
+  background: radial-gradient(
+    circle at 44% 42%,
+    color-mix(in srgb, var(--dsw-orb-plume-rose) 62%, transparent) 0%,
+    color-mix(in srgb, var(--dsw-orb-plume-warm) 48%, transparent) 48%,
+    transparent 76%
+  );
+  filter: blur(22px);
+  opacity: var(--dsw-orb-glow-opacity);
+  animation: hero-orb-drift 34s linear infinite;
+}
+
+.orb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--dsw-orb-core);
+  /* Fuzzy edge: the artwork fades out past the silhouette, tight enough that
+     the sphere still reads as a body rather than a haze. */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, rgb(0 0 0) 64%, transparent 92%);
+  mask-image: radial-gradient(circle at 50% 50%, rgb(0 0 0) 64%, transparent 92%);
+  animation: hero-orb-breathe 11s ease-in-out infinite;
+}
+
+/* The plume field: four soft lobes on one slow rotation — warm light from the
+   upper left, lilac up the right edge, rose across the floor, one cool hint at
+   the crown. Each lobe paints a wash so overlaps mix instead of banding. */
+.orb::before {
+  content: '';
+  position: absolute;
+  inset: -14%;
+  background:
+    radial-gradient(34% 30% at 62% 16%, color-mix(in srgb, var(--dsw-orb-plume-blue) 58%, transparent) 0%, transparent 100%),
+    radial-gradient(40% 36% at 74% 44%, color-mix(in srgb, var(--dsw-orb-plume-lilac) 74%, transparent) 0%, transparent 100%),
+    radial-gradient(52% 44% at 50% 78%, color-mix(in srgb, var(--dsw-orb-plume-rose) 82%, transparent) 0%, transparent 100%),
+    radial-gradient(48% 44% at 28% 36%, color-mix(in srgb, var(--dsw-orb-plume-warm) 78%, transparent) 0%, transparent 100%);
+  filter: blur(16px);
+  animation: hero-orb-swirl 38s linear infinite;
+}
+
+/* Halo and underside: the highlight lights the upper left, the deeper seat
+   under the lower right keeps the body spherical. */
+.orb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  corner-shape: round;
+  background:
+    radial-gradient(circle at 32% 24%, var(--dsw-orb-halo) 0%, transparent 46%),
+    radial-gradient(circle at 72% 80%, color-mix(in srgb, var(--dsw-orb-plume-lilac) 26%, transparent) 0%, transparent 58%);
+}
+
+@keyframes hero-orb-swirl {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hero-orb-drift {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes hero-orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .orb::before,
+  .orbGlow {
+    animation: none;
+  }
+}
+
 /* The design language's heading-lg rung: 40/600 with tight leading and -1px
    tracking, the display step the reference uses for its sub-page headlines.
    The preview badge is a product addition outside that source: a superscript

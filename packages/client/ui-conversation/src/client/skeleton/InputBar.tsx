@@ -38,6 +38,7 @@ import { resolveSubmitMode } from '../input/submission-policy.ts'
 import { attachmentErrorText, imageSizeText } from '../image-labels.ts'
 import { isImageMediaType } from '../service.ts'
 import { ContextMeter } from './ContextMeter.tsx'
+import { HeroSuggestions } from './HeroSuggestions.tsx'
 import { observeControlRow } from './control-row-layout.ts'
 import css from './InputBar.module.css'
 
@@ -291,6 +292,21 @@ export const InputBar = memo(function InputBar({
     if (document.activeElement !== editor.getRootElement()) focusDraftEditor(editor, revealSelection)
   }
 
+  // Starter chips: hero placement and an editable bar. The row keeps its slot
+  // whenever it renders and only goes inactive while the draft or the
+  // attachment rail has content — the states where adopting a prompt outright
+  // would destroy something — so the composer never moves as the user types.
+  // It needs both live faces, the draft writer and the editor, to take the
+  // picked prompt and the keyboard.
+  const starterInput = variant === 'hero' && editable ? inputActions : undefined
+  const starterEditor = starterInput === undefined ? null : editor
+  const starterPick = starterInput === undefined || starterEditor === null
+    ? null
+    : (prompt: string): void => {
+      starterInput.setDraft(prompt)
+      focusDraftEditor(starterEditor, revealSelection)
+    }
+
   const onToggleCommandMenu = (): void => {
     if (keyboard === undefined) return
     // The menu is a combobox over the editor, so the keyboard has to be there
@@ -382,141 +398,155 @@ export const InputBar = memo(function InputBar({
           onDone={dismissToast}
         />
       )}
-      {notice?.level === 'info' && (
-        <div className={css.notice} role="status">
-          {notice.text}
-        </div>
-      )}
-      {/* Trigger clicks land on the card, not the editor: the toolbar row's
-          disabled controls swallow clicks otherwise (the CSS state disarms
-          their pointer events), so the WHOLE capsule is the pick target.
-          pointerdown stops here so the Menu's outside-close cannot race the
-          click's reopen (close-then-open flickers the chip's open echo). */}
-      <div
-        ref={cardRef}
-        className={clsx(css.card, workspaceTrigger && css.cardWorkspaceTrigger)}
-        data-composer-card
-        onClick={workspaceTrigger ? onRequestWorkspace : undefined}
-        onPointerDown={workspaceTrigger ? (e) => { e.stopPropagation() } : undefined}
-        onMouseDown={onCardMouseDown}
-      >
-        {sessionId !== undefined && (
-          <div className={css.overlayAnchor} data-composer-overlay>{renderSlot('conversation.input.overlay', {})}</div>
+      {/* The composer column: in the blank-Session hero the hint row and the
+          card share one tinted tray (the reference composer's two-layer
+          build). The docked composer keeps the notice strip above the same
+          card on the page background. */}
+      <div className={clsx(css.tray, variant === 'hero' && css.trayHero)}>
+        {/* Hero hint row: the Workspace picker and the agent-preset seat sit on
+            the tray directly above the card (reference px-4 py-2); the
+            Conversation shell composes them and hands them down as this
+            accessory, so the row never leaves the tray. */}
+        {variant === 'hero' && accessory !== undefined && (
+          <div className={css.hintRow}>{accessory}</div>
         )}
-        {accessory !== undefined && <div className={css.accessory}>{accessory}</div>}
-        {renderSlot('conversation.input.attachments', {
-          attachments,
-          canAcceptDrop,
-          onAddFiles: intakeFiles,
-          onRemoveAttachment: (id) => { removeAttachment?.(id) },
-          uploads,
-          onRetryFile: (id) => { retryFileUpload?.(id) },
-          dropLimits: imageLimits === undefined ? undefined : {
-            count: imageLimits.maxImagesPerMessage,
-            size: imageSizeText(imageLimits.maxImageBytes),
-          },
-        })}
-        {/* One scrollport, one text surface: the contenteditable grows with
-            its content and .scroll — capped at 14 lines in CSS — is the only
-            thing that scrolls. Chips are decorator portals inside the same
-            surface, so wrapping, caret geometry, and scrolling are the
-            browser's own. */}
-        <DraftEditor
-          classNames={css}
-          editor={editor}
-          scrollRef={scrollRef}
-          editable={editable}
-          editorDisabled={editorDisabled}
-          phase={input?.phase ?? 'inert'}
-          placeholderText={placeholderText}
-          ariaLabel={workspaceTrigger ? t('hero.chooseWorkspace') : placeholderText}
-          workspaceTrigger={workspaceTrigger}
-          workspacePickerOpen={workspacePickerOpen}
-          onWorkspaceKeyDown={onWorkspaceKeyDown}
-          hint={hint}
-          showPlaceholder={draft === '' && attachments.length === 0 && !claimActive}
-        />
-        <div ref={rowRef} className={css.row}>
-          <div className={css.tools} hidden={activity}>
-            <Tooltip label={t('input.commands')} side="top" delayMs={500}>
-              <button
-                type="button"
-                className={css.add}
-                aria-label={t('input.commands')}
-                aria-haspopup="listbox"
-                aria-expanded={commandMenuOpen}
-                disabled={locked || toggleCommandMenu === undefined}
-                onMouseDown={keepFocus}
-                onClick={onToggleCommandMenu}
-              >
-                <IconPlusOutlineMedium size={14} />
-              </button>
-            </Tooltip>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              disabled={subagent !== null}
-              hidden
-              onChange={onPickFiles}
-            />
-            <div className={css.modes}>
-              {sessionId === undefined ? null : renderSlot('conversation.input.permission', { locked })}
-              {sessionId === undefined ? null : renderSlot('conversation.input.plan', { locked })}
-            </div>
-            {input === undefined || sessionId === undefined
-              ? null
-              : renderSlot('conversation.input.left', {})}
+        {notice?.level === 'info' && (
+          <div className={css.notice} role="status">
+            {notice.text}
           </div>
-          <div className={clsx(css.trailing, activity && css.trailingActive)}>
-            <div className={css.standardControls} hidden={activity}>
+        )}
+        {/* Trigger clicks land on the card, not the editor: the toolbar row's
+            disabled controls swallow clicks otherwise (the CSS state disarms
+            their pointer events), so the WHOLE capsule is the pick target.
+            pointerdown stops here so the Menu's outside-close cannot race the
+            click's reopen (close-then-open flickers the chip's open echo). */}
+        <div
+          ref={cardRef}
+          className={clsx(css.card, workspaceTrigger && css.cardWorkspaceTrigger)}
+          data-composer-card
+          onClick={workspaceTrigger ? onRequestWorkspace : undefined}
+          onPointerDown={workspaceTrigger ? (e) => { e.stopPropagation() } : undefined}
+          onMouseDown={onCardMouseDown}
+        >
+          {sessionId !== undefined && (
+            <div className={css.overlayAnchor} data-composer-overlay>{renderSlot('conversation.input.overlay', {})}</div>
+          )}
+          {variant === 'composer' && accessory !== undefined && <div className={css.accessory}>{accessory}</div>}
+          {renderSlot('conversation.input.attachments', {
+            attachments,
+            canAcceptDrop,
+            onAddFiles: intakeFiles,
+            onRemoveAttachment: (id) => { removeAttachment?.(id) },
+            uploads,
+            onRetryFile: (id) => { retryFileUpload?.(id) },
+            dropLimits: imageLimits === undefined ? undefined : {
+              count: imageLimits.maxImagesPerMessage,
+              size: imageSizeText(imageLimits.maxImageBytes),
+            },
+          })}
+          {/* One scrollport, one text surface: the contenteditable grows with
+              its content and .scroll — capped at 14 lines in CSS — is the only
+              thing that scrolls. Chips are decorator portals inside the same
+              surface, so wrapping, caret geometry, and scrolling are the
+              browser's own. */}
+          <DraftEditor
+            classNames={css}
+            editor={editor}
+            scrollRef={scrollRef}
+            editable={editable}
+            editorDisabled={editorDisabled}
+            phase={input?.phase ?? 'inert'}
+            placeholderText={placeholderText}
+            ariaLabel={workspaceTrigger ? t('hero.chooseWorkspace') : placeholderText}
+            workspaceTrigger={workspaceTrigger}
+            workspacePickerOpen={workspacePickerOpen}
+            onWorkspaceKeyDown={onWorkspaceKeyDown}
+            hint={hint}
+            showPlaceholder={draft === '' && attachments.length === 0 && !claimActive}
+          />
+          <div ref={rowRef} className={css.row}>
+            <div className={css.tools} hidden={activity}>
+              <Tooltip label={t('input.commands')} side="top" delayMs={500}>
+                <button
+                  type="button"
+                  className={css.add}
+                  aria-label={t('input.commands')}
+                  aria-haspopup="listbox"
+                  aria-expanded={commandMenuOpen}
+                  disabled={locked || toggleCommandMenu === undefined}
+                  onMouseDown={keepFocus}
+                  onClick={onToggleCommandMenu}
+                >
+                  <IconPlusOutlineMedium size={14} />
+                </button>
+              </Tooltip>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                disabled={subagent !== null}
+                hidden
+                onChange={onPickFiles}
+              />
+              <div className={css.modes}>
+                {sessionId === undefined ? null : renderSlot('conversation.input.permission', { locked })}
+                {sessionId === undefined ? null : renderSlot('conversation.input.plan', { locked })}
+              </div>
               {input === undefined || sessionId === undefined
                 ? null
-                : renderSlot('conversation.input.right', {})}
-              {sessionId === undefined ? null : renderSlot('conversation.input.model', { locked: modelSeatLocked })}
+                : renderSlot('conversation.input.left', {})}
             </div>
-            {input === undefined || sessionId === undefined ? null : <div className={activity ? css.activityExpanded : css.activity}>
-              {renderSlot('conversation.input.activity', { locked, onActiveChange: setActivity })}
-            </div>}
-            {interruptible && (
-              <Tooltip label={t('input.stop')} shortcutKeys={stopKeys} side="top" delayMs={500} disabled={stop === undefined}>
+            <div className={clsx(css.trailing, activity && css.trailingActive)}>
+              <div className={css.standardControls} hidden={activity}>
+                {input === undefined || sessionId === undefined
+                  ? null
+                  : renderSlot('conversation.input.right', {})}
+                {sessionId === undefined ? null : renderSlot('conversation.input.model', { locked: modelSeatLocked })}
+              </div>
+              {input === undefined || sessionId === undefined ? null : <div className={activity ? css.activityExpanded : css.activity}>
+                {renderSlot('conversation.input.activity', { locked, onActiveChange: setActivity })}
+              </div>}
+              {interruptible && (
+                <Tooltip label={t('input.stop')} shortcutKeys={stopKeys} side="top" delayMs={500} disabled={stop === undefined}>
+                  <button
+                    type="button"
+                    className={css.primary}
+                    aria-label={t('input.stop')}
+                    disabled={stop === undefined}
+                    onMouseDown={keepFocus}
+                    onClick={stop}
+                  >
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
+                      <rect x="3" y="3" width="10" height="10" rx="3" fill="currentColor" />
+                    </svg>
+                  </button>
+                </Tooltip>
+              )}
+              <Tooltip label={primaryStops ? t('input.stop') : primaryLabel} shortcutKeys={primaryStops ? stopKeys : undefined} side="top" delayMs={500} disabled={primaryDisabled}>
                 <button
                   type="button"
                   className={css.primary}
-                  aria-label={t('input.stop')}
-                  disabled={stop === undefined}
+                  aria-label={primaryLabel}
+                  disabled={primaryDisabled}
                   onMouseDown={keepFocus}
-                  onClick={stop}
+                  onClick={onPrimary}
                 >
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
-                    <rect x="3" y="3" width="10" height="10" rx="3" fill="currentColor" />
-                  </svg>
+                  {primaryStops ? (
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
+                      <rect x="3" y="3" width="10" height="10" rx="3" fill="currentColor" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
+                      <path d="M8.3125 0.980183C8.66767 1.0531 8.97902 1.20418 9.2627 1.43233C9.48724 1.61297 9.73029 1.85793 9.97949 2.10714L14.707 6.83468L13.293 8.24874L9 3.95577V15.0417H7V3.95577L2.70703 8.24874L1.29297 6.83468L6.02051 2.10714C6.26971 1.85793 6.51277 1.61297 6.7373 1.43233C6.97662 1.23986 7.28445 1.04402 7.6875 0.980183C7.8973 0.947006 8.1031 0.95516 8.3125 0.980183Z" fill="currentColor" />
+                    </svg>
+                  )}
                 </button>
               </Tooltip>
-            )}
-            <Tooltip label={primaryStops ? t('input.stop') : primaryLabel} shortcutKeys={primaryStops ? stopKeys : undefined} side="top" delayMs={500} disabled={primaryDisabled}>
-              <button
-                type="button"
-                className={css.primary}
-                aria-label={primaryLabel}
-                disabled={primaryDisabled}
-                onMouseDown={keepFocus}
-                onClick={onPrimary}
-              >
-                {primaryStops ? (
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
-                    <rect x="3" y="3" width="10" height="10" rx="3" fill="currentColor" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden>
-                    <path d="M8.3125 0.980183C8.66767 1.0531 8.97902 1.20418 9.2627 1.43233C9.48724 1.61297 9.73029 1.85793 9.97949 2.10714L14.707 6.83468L13.293 8.24874L9 3.95577V15.0417H7V3.95577L2.70703 8.24874L1.29297 6.83468L6.02051 2.10714C6.26971 1.85793 6.51277 1.61297 6.7373 1.43233C6.97662 1.23986 7.28445 1.04402 7.6875 0.980183C7.8973 0.947006 8.1031 0.95516 8.3125 0.980183Z" fill="currentColor" />
-                  </svg>
-                )}
-              </button>
-            </Tooltip>
+            </div>
           </div>
         </div>
       </div>
+      {starterPick === null ? null : <HeroSuggestions t={t} onPick={starterPick} inactive={!empty} />}
       <div className={css.dock} data-composer-dock>
         {variant === 'composer' && input !== undefined && sessionId !== undefined
           ? renderSlot('conversation.composer.dock', {})

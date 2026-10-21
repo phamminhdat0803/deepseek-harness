@@ -369,7 +369,11 @@ export interface ComposerBarOwnerProps {
   /** Open the Workspace picker from the inert composer surface. */
   onRequestWorkspace?: () => void
   placeholder?: string
-  /** Optional content rendered above the composer surface. */
+  /**
+   * Optional content above the composer surface: the blank-Session hero
+   * renders it as the tray's hint row over the card, the docked composer
+   * inside the card above the draft.
+   */
   accessory?: ReactNode
 }
 

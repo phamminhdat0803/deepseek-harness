@@ -1,0 +1,23 @@
+/* Conversation hero orb: the artwork palette for the blank-Session mark. The
+   gradient composition, geometry, and motion belong to the feature. The orb is
+   opaque artwork rather than a surface, so the dark palette deepens the plumes
+   and calms the halo instead of remapping them to surface aliases. */
+body {
+  --dsw-orb-plume-warm: #ff9a6b;
+  --dsw-orb-plume-rose: #ff7fae;
+  --dsw-orb-plume-lilac: #a78bfa;
+  --dsw-orb-plume-blue: #8ab6ff;
+  --dsw-orb-core: #fff6f0;
+  --dsw-orb-halo: color-mix(in srgb, var(--dsw-static-neutral-bluish-00) 55%, transparent);
+  --dsw-orb-glow-opacity: 0.45;
+}
+
+body[data-ds-dark-theme] {
+  --dsw-orb-plume-warm: #f07f4e;
+  --dsw-orb-plume-rose: #e2668f;
+  --dsw-orb-plume-lilac: #8f74e0;
+  --dsw-orb-plume-blue: #6f9be6;
+  --dsw-orb-core: #f2e3da;
+  --dsw-orb-halo: color-mix(in srgb, var(--dsw-static-neutral-bluish-00) 32%, transparent);
+  --dsw-orb-glow-opacity: 0.3;
+}

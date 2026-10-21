@@ -24,3 +24,8 @@
 - button "Plan mode on, press to turn off": Plan
 - button "Select model, current DeepSeek-V4-Flash": DeepSeek-V4-Flash
 - button "Send message" [disabled]
+- group "Starter prompts":
+  - button "Explore"
+  - button "Build"
+  - button "Test"
+  - button "Review"

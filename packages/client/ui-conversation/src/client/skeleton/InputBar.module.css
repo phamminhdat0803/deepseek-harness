@@ -30,6 +30,61 @@
   padding: 0 var(--dsh-composer-side-clearance);
 }
 
+/* Composer column: the notice strip and the card stack in it, capped at the
+   card's own width so the column stays one axis. */
+.tray {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: var(--dsh-composer-card-max-width);
+  min-width: 0;
+}
+
+/* Hero tray (reference ai-chat-v2, p-1 / rounded-2xl): the hint row and the
+   card share one tinted surface, 4px of it showing on every side, one radius
+   rung above the field so the tray reads as the outer surface. The card keeps
+   its own fill, soft elevation, and 0.5px ring: in the dark palette the tray
+   tint over the page resolves to nearly the card fill, so the ring is what
+   keeps the two surfaces apart. */
+.trayHero {
+  padding: 4px;
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+/* Hero hint row (reference px-4 py-2): the composer's own seats — the
+   Workspace picker and the agent-preset chip — ride the tray above the card.
+   The left pad lines the first glyph up with the draft text one card pad in
+   from the tray edge. */
+.hintRow {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  padding: 4px 10px 6px 14px;
+}
+
+/* The seats' own hover/hold fill is the tray's own tint, so on the tray the
+   row raises them with the solid fill instead: hover and an open menu must
+   stay visible against the surface they now sit on. */
+.hintRow button:hover:not(:disabled),
+.hintRow button[aria-expanded='true'] {
+  background: var(--dsw-alias-interactive-bg-hover-solid);
+}
+
+/* The notice rides the tray here, so it drops its own fill and gap and lines
+   its text up with the draft one tray pad in (reference px-4 py-2 text-xs). */
+.trayHero .notice {
+  margin-bottom: 0;
+  padding: 8px 10px;
+  border-radius: var(--dsw-radius-md);
+  background: transparent;
+}
+
 .notice {
   width: 100%;
   max-width: var(--dsh-composer-card-max-width);

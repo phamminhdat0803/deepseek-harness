@@ -1,0 +1,64 @@
+/* Blank-session starter chips: one capsule button per starter prompt, on the
+   composer card's own column so the row starts at the card's left edge. */
+
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  /* The card's column, so the row aligns with the card rather than the page;
+     automatic side margins center the capped column in the composer stack. */
+  width: 100%;
+  max-width: var(--dsh-composer-card-max-width);
+  margin: 12px auto 0;
+}
+
+/* Capsule chip: the composer card's own hairline (l2) and the sibling
+   controls' 28px height and 13/20 label, with the caption chevron pair's
+   tone for the glyph. Transparent at rest; the hover fill is the shared
+   interactive one. */
+.chip {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  corner-shape: round;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-family: var(--dsw-font-family);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 100ms ease, color 100ms ease;
+}
+
+.chip:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+}
+
+.icon {
+  flex: none;
+  color: var(--dsw-alias-label-caption);
+}
+
+.chip:hover .icon {
+  color: var(--dsw-alias-label-secondary);
+}
+
+/* Hidden in place: the row keeps its slot in the hero stack, so adopting a
+   prompt (or typing) never moves the composer under the user's caret. */
+.inactive {
+  visibility: hidden;
+}
