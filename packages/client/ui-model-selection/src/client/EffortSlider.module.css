@@ -1,0 +1,308 @@
+/* Track, clipping and thumb share one position so a drag stays visually continuous. */
+.power {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 8px 4px 4px;
+  --power-accent: var(--dsw-alias-state-business-primary);
+  --power-light: var(--dsw-alias-toast-label);
+  --power-inset: 12px;
+  --power-ease: cubic-bezier(0.2, 0, 0, 1);
+  --power-fill: linear-gradient(90deg,
+    color-mix(in srgb, var(--power-accent) 68%, var(--dsw-alias-bg-base)),
+    var(--power-accent) 75%,
+    color-mix(in srgb, var(--power-accent) 84%, var(--power-light)));
+}
+
+/* The theme's orb palette also owns these artwork colors in dark mode. */
+.power[data-high],
+.power[data-max] {
+  --power-accent: color-mix(in srgb, var(--dsw-orb-plume-lilac) 75%, var(--dsw-alias-state-business-primary));
+}
+
+.power[data-max] {
+  --power-fill: linear-gradient(105deg,
+    var(--power-accent),
+    var(--dsw-orb-plume-blue) 25%,
+    color-mix(in srgb, var(--dsw-orb-plume-blue) 60%, var(--power-accent)) 45%,
+    var(--dsw-orb-plume-lilac) 65%,
+    color-mix(in srgb, var(--dsw-orb-plume-lilac) 75%, var(--power-accent)) 85%,
+    var(--power-accent));
+}
+
+.boost {
+  display: inline-flex;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--dsw-radius-sm);
+  outline: none;
+  background: transparent;
+  color: var(--dsw-alias-label-caption);
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease, transform 160ms var(--power-ease);
+}
+
+.boost svg {
+  width: 16px;
+  height: 16px;
+  transition: filter 200ms ease;
+}
+
+.boost:focus-visible,
+.strip:focus-visible {
+  box-shadow: 0 0 0 2px var(--dsw-focus-ring-color);
+}
+
+.boost:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.boost:disabled {
+  cursor: default;
+  color: var(--dsw-alias-label-dimmed);
+}
+
+.boostOn {
+  color: var(--power-accent);
+}
+
+.boostOn svg {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--power-accent) 28%, transparent));
+}
+
+.strip {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 40px;
+  border-radius: var(--dsw-radius-sm);
+  outline: none;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  --power-edge: calc(var(--power-inset) + (100% - 2 * var(--power-inset)) * var(--pct, 0));
+}
+
+.strip[data-dragging] {
+  cursor: grabbing;
+}
+
+.strip[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.track,
+.fill,
+.clip {
+  position: absolute;
+  inset-block: 8px;
+  border-radius: 999px;
+  corner-shape: round;
+  pointer-events: none;
+}
+
+.track {
+  inset-inline: 0;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 8%, transparent);
+  box-shadow: inset 0 0 0 0.5px var(--dsw-alias-border-l1);
+}
+
+.fill {
+  left: 0;
+  width: calc(var(--power-edge) + var(--power-inset));
+  background: var(--power-fill);
+  box-shadow: inset 0 0.5px 0 color-mix(in srgb, var(--power-light) 22%, transparent);
+  transition: width 220ms var(--power-ease), opacity 160ms ease;
+}
+
+.spectrum {
+  background-size: 200% 100%;
+  animation: spectrumFlow 5.5s linear infinite;
+}
+
+.strip[data-empty] .fill,
+.strip[data-min] .fill {
+  opacity: 0;
+}
+
+.clip {
+  left: 0;
+  width: calc(var(--power-edge) + var(--power-inset));
+  overflow: hidden;
+  transition: width 220ms var(--power-ease);
+}
+
+.stream {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, var(--power-light) 12%, var(--power-light) 88%, transparent);
+}
+
+.path {
+  position: absolute;
+  top: var(--particle-top);
+  inset-inline: 0;
+  height: 0;
+  animation: flow calc(var(--particle-duration) * 0.55) var(--particle-delay) linear infinite;
+}
+
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--power-light);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--power-light) 45%, transparent);
+  opacity: var(--particle-opacity);
+  transform: translate(-50%, -50%) scale(var(--particle-scale));
+}
+
+.particle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--power-light), transparent);
+  opacity: 0.55;
+  transform: translateY(-50%);
+}
+
+.ticks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tick {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--power-inset) + (100% - 2 * var(--power-inset)) * var(--tick-pct));
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 26%, transparent);
+  transform: translate(-50%, -50%);
+  transition: opacity 180ms ease, background-color 180ms ease;
+}
+
+.tick[data-selected] {
+  background: color-mix(in srgb, var(--power-light) 64%, transparent);
+}
+
+.strip[data-max] .tick {
+  animation: tickBurst 620ms var(--power-ease) both;
+}
+
+.thumb {
+  position: absolute;
+  top: 50%;
+  left: var(--power-edge);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--power-light);
+  box-shadow:
+    0 0 0 0.5px var(--dsw-alias-border-l3),
+    0 1px 3px var(--dsw-alias-bg-mask-2);
+  transform: translate(-50%, -50%);
+  transition: left 220ms var(--power-ease), box-shadow 200ms ease;
+  pointer-events: none;
+}
+
+.strip[data-max] .thumb {
+  box-shadow:
+    0 0 0 0.5px color-mix(in srgb, var(--power-accent) 32%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--power-accent) 12%, transparent),
+    0 1px 3px var(--dsw-alias-bg-mask-2);
+}
+
+.strip[data-dragging] .thumb,
+.strip[data-dragging] .fill,
+.strip[data-dragging] .clip {
+  transition: none;
+}
+
+.hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .boost:hover:not(:disabled) {
+    background: var(--dsw-alias-interactive-bg-hover);
+    color: var(--dsw-alias-label-secondary);
+  }
+
+  .boostOn:hover:not(:disabled) {
+    color: var(--power-accent);
+  }
+
+  .strip:hover:not([aria-disabled='true']) .thumb {
+    box-shadow:
+      0 0 0 0.5px var(--dsw-alias-border-l3),
+      0 0 0 3px color-mix(in srgb, var(--power-accent) 14%, transparent),
+      0 1px 3px var(--dsw-alias-bg-mask-2);
+  }
+}
+
+@keyframes flow {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes spectrumFlow {
+  from {
+    background-position: 100% 50%;
+  }
+
+  to {
+    background-position: -100% 50%;
+  }
+}
+
+@keyframes tickBurst {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% - 8px), -50%) scale(0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .power *,
+  .boost svg,
+  .strip[data-max] .tick {
+    animation: none;
+    transition: none;
+  }
+
+  .clip {
+    display: none;
+  }
+}

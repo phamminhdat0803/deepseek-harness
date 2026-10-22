@@ -11,8 +11,9 @@
  * back to the trigger. A drilled pane focuses the current effort or model
  * search field. Provider headings paint their background only while pinned
  * by scrolling. Clearing a query restores the full list and search focus.
- * Selecting restores trigger focus without a ring until the trigger loses focus
- * or the menu reopens. Model names match a case-insensitive ordered subsequence
+ * Selecting a list row restores trigger focus without a ring until the trigger
+ * loses focus or the menu reopens. The root effort slider keeps the menu and
+ * slider focus after selection. Model names match a case-insensitive ordered subsequence
  * within each provider group, ranked by
  * prefix, alignment score, then catalog order. Returning to the root pane
  * hands focus back to the cell that opened it. Data and submission ride the
@@ -39,6 +40,7 @@ import {
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRenderSlots, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ModelLabelOwner, ModelSelectInjected } from './slots.ts'
+import { EffortSlider } from './EffortSlider.tsx'
 import css from './ModelSelect.module.css'
 import { orderModelProviders } from './provider-order.ts'
 
@@ -148,6 +150,10 @@ export function ModelSelect(
     ], [reasoning, t])
   const { pending } = state
   const busy = pending !== null
+  // The root pane's power strip reuses the explicit levels: the provider
+  // default has no position on it, so that state renders unfilled (index -1).
+  const powerLevels = reasoning?.efforts ?? []
+  const activePowerIndex = powerLevels.findIndex(level => level.id === effectiveEffort)
 
   const reload = (): void => {
     lastActionRef.current = 'load'
@@ -373,10 +379,10 @@ export function ModelSelect(
     close()
   }
 
-  const settleSelection = (result: Awaited<ReturnType<ModelSelectInjected['select']>>): void => {
+  const settleSelection = (result: Awaited<ReturnType<ModelSelectInjected['select']>>, dismissMenu: boolean): void => {
     if (result === undefined) return
     if (result.ok) {
-      if (rootRef.current !== null) closeAfterSelection()
+      if (dismissMenu && rootRef.current !== null) closeAfterSelection()
       return
     }
     const { error } = result
@@ -389,12 +395,14 @@ export function ModelSelect(
     })
   }
 
-  const submit = (selection: ModelSelection): void => {
+  const submit = (selection: ModelSelection, dismissMenu = true): void => {
     lastActionRef.current = 'select'
-    // Disabled option rows cannot retain focus while a selection is pending.
-    setSelectionFocus(true)
-    triggerRef.current?.focus()
-    void select(selection).then(settleSelection)
+    if (dismissMenu) {
+      // Disabled option rows cannot retain focus while a selection is pending.
+      setSelectionFocus(true)
+      triggerRef.current?.focus()
+    }
+    void select(selection).then((result) => { settleSelection(result, dismissMenu) })
   }
 
   const choose = (selection: ModelSelection): void => {
@@ -405,10 +413,10 @@ export function ModelSelect(
     submit(selection)
   }
 
-  const chooseEffort = (effort: string | undefined): void => {
+  const chooseEffort = (effort: string | undefined, dismissMenu = true): void => {
     if (state.current === null) return
     if (effectiveEffort === effort) {
-      closeAfterSelection()
+      if (dismissMenu) closeAfterSelection()
       return
     }
     const selection: ModelSelection = {
@@ -416,7 +424,7 @@ export function ModelSelect(
       model: state.current.model,
       ...effort === undefined ? {} : { reasoningEffort: effort },
     }
-    submit(selection)
+    submit(selection, dismissMenu)
   }
 
   const waiting = currentChoice === undefined && state.status === 'loading'
@@ -519,6 +527,22 @@ export function ModelSelect(
                   <span className={css.cellValue}>{effortLabel}</span>
                   <IconChevronRightOutlineRegular className={css.cellChevron} />
                 </button>
+              )}
+              {powerLevels.length > 1 && (
+                <EffortSlider
+                  levels={powerLevels}
+                  activeIndex={activePowerIndex}
+                  valueLabel={effortLabel ?? ''}
+                  label={t('effort.power')}
+                  hint={t('effort.powerHint')}
+                  boostLabel={t('effort.boost')}
+                  restoreIndex={powerLevels.findIndex(level => level.id === reasoning?.defaultEffort)}
+                  busy={busy}
+                  onSelect={(index) => {
+                    const level = powerLevels[index]
+                    if (level !== undefined) chooseEffort(level.id, false)
+                  }}
+                />
               )}
             </>
           )}
