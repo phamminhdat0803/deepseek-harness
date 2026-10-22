@@ -21,7 +21,6 @@ import { Button, IconPlusOutlineRegular, Modal } from '@deepseek-ai/dsh-client-u
 import { formatCapacity, parseCapacity } from './DeepSeekModelsEditor.tsx'
 import type { ModelsOperations } from './operations.ts'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
-import type { ReasoningEffortLevelChoice } from './store.ts'
 import type { en } from './locales.ts'
 import { ModelRow } from './ModelRow.tsx'
 import styles from './ModelsSection.module.css'
@@ -68,14 +67,14 @@ export interface ModelListEditorProps {
   models: readonly ModelDraft[]
   /** Installed provider whose catalog supplies defaults without endpoint I/O. */
   catalogProvider?: string | undefined
+  /**
+   * Reasoning levels a hand-declared route's rows may declare in
+   * `reasoningEfforts`, in escalation order; absent or empty shows no
+   * reasoning control, leaving a catalog model's levels to the catalog.
+   */
+  reasoningLevels?: readonly string[] | undefined
   /** Route input types for models absent from the installed catalog. */
   defaultInput?: readonly string[] | undefined
-  /**
-   * Levels the owning schema's `models` entries may declare, in escalation
-   * order. Empty for a family whose models declare no levels, which hides the
-   * control on every row rather than offering levels the adapter cannot take.
-   */
-  reasoningLevels?: readonly ReasoningEffortLevelChoice[] | undefined
   /** Whether the user layer currently owns the whole array; absent on a create. */
   overridden?: boolean
   /** Replace the drafted rows. */
@@ -369,10 +368,10 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
             inputField="input"
             inputFallback={inputDefaults.get(textOf(model, 'id')) ?? props.defaultInput}
             inputLoading={catalogProvider !== undefined && catalog === undefined}
+            reasoningLevels={props.reasoningLevels}
             expanded={expanded.has(index)}
             disabled={disabled}
             t={t}
-            reasoningLevels={props.reasoningLevels}
             contextWindow={{
               value: capacityText(model, index, 'contextWindow'),
               placeholder: CAPACITY_HINT.contextWindow,

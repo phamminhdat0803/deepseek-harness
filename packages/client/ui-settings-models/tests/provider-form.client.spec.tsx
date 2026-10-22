@@ -12,7 +12,7 @@ import type { ModelsSectionInjected, ModelsSectionProps } from '../src/client/Mo
 import { CustomProviderCard } from '../src/client/CustomProviderCard.tsx'
 import { formatCapacity, parseCapacity } from '../src/client/DeepSeekModelsEditor.tsx'
 import { SettingsDescribeMirror } from '@deepseek-ai/dsh-client-ui-settings/src/client/settings-mirror.ts'
-import { ModelsSettingsStore, deriveKeyRef, protocolChoices } from '../src/client/store.ts'
+import { ModelsSettingsStore, deriveKeyRef, protocolChoices, reasoningLevelChoices } from '../src/client/store.ts'
 import { createModelsOperations } from '../src/client/operations.ts'
 import type { ModelsOperations } from '../src/client/operations.ts'
 import { en } from '../src/client/locales.ts'
@@ -23,16 +23,7 @@ afterEach(cleanup)
 const t: ModelsSectionInjected['t'] = key => en[key]
 
 const PROTOCOLS = ['openai-completions', 'openai-responses', 'anthropic-messages']
-
-/** The levels the `llm-pi-ai` schema offers, as the section reads them. */
-const REASONING_LEVELS = [
-  { level: 'off', wire: null },
-  { level: 'low', wire: 'low' },
-  { level: 'medium', wire: 'medium' },
-  { level: 'high', wire: 'high' },
-  { level: 'xhigh', wire: 'xhigh' },
-  { level: 'max', wire: 'max' },
-]
+const LEVELS = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']
 
 /** The pi-ai profile shape as the host serializes it, including the layer-1 fields. */
 const PiAiConfig = Schema.object({
@@ -47,11 +38,9 @@ const PiAiConfig = Schema.object({
       name: Schema.string(),
       contextWindow: Schema.number(),
       maxTokens: Schema.number(),
-      input: Schema.array(Schema.union(['text', 'image'])),
-      // Mirrors the adapter's own union of the `false` arm and the level dict.
       reasoningEfforts: Schema.union([
         Schema.const(false),
-        Schema.dict(Schema.union([Schema.string(), Schema.const(null)]), Schema.union(REASONING_LEVELS.map(level => level.level))),
+        Schema.dict(Schema.union([Schema.string(), Schema.const(null)]), Schema.union(LEVELS)),
       ]),
     })),
     reasoning: Schema.union(['off', 'high']),
@@ -277,6 +266,23 @@ describe('protocolChoices', () => {
     const plain = { ...namespace, schema: JSON.parse(JSON.stringify(Schema.object({}).toJSON())) as JsonValue }
     expect(protocolChoices(plain, settingsSchema)).toEqual([])
     await Promise.resolve()
+  })
+})
+
+describe('reasoningLevelChoices', () => {
+  it('reads the levels out of the reasoningEfforts key schema and nothing else', () => {
+    const { namespace } = scriptedFace()
+    expect(reasoningLevelChoices(namespace, settingsSchema)).toEqual(LEVELS)
+    expect(reasoningLevelChoices(undefined, settingsSchema)).toEqual([])
+    const plain = { ...namespace, schema: JSON.parse(JSON.stringify(Schema.object({}).toJSON())) as JsonValue }
+    expect(reasoningLevelChoices(plain, settingsSchema)).toEqual([])
+    const withoutDict = Schema.object({
+      providers: Schema.dict(Schema.object({
+        models: Schema.array(Schema.object({ reasoningEfforts: Schema.union([Schema.const(false)]) })),
+      })),
+    })
+    const falseOnly = { ...namespace, schema: JSON.parse(JSON.stringify(withoutDict.toJSON())) as JsonValue }
+    expect(reasoningLevelChoices(falseOnly, settingsSchema)).toEqual([])
   })
 })
 
@@ -691,8 +697,7 @@ describe('endpoint interrogation', () => {
     const scripted = scriptedFace()
     render(
       <CustomProviderCard
-        taken={[]} protocols={PROTOCOLS} reasoningLevels={REASONING_LEVELS}
-        revision={7} operations={operationsWith(scripted.face)}
+        taken={[]} protocols={PROTOCOLS} reasoningLevels={LEVELS} revision={7} operations={operationsWith(scripted.face)}
         t={t} readOnly={false} onClose={vi.fn()}
       />,
     )
@@ -723,83 +728,6 @@ describe('endpoint interrogation', () => {
     expect(screen.getByLabelText(`${en.contextWindow} 1`)).toBeTruthy()
     expandModel(1)
     expect(screen.queryByLabelText(`${en.contextWindow} 1`)).toBeNull()
-  })
-
-  it('declares a hand-entered model\u2019s reasoning levels through the composer picker', async () => {
-    const { mutate } = await mountSection({
-      providers: { openai: { baseURL: 'https://proxy.example/v1', models: [{ id: 'acme-think' }] } },
-    })
-    openEditor('openai')
-    expandModel(1)
-
-    // The levels come from the adapter's own schema, so the row offers
-    // exactly what this namespace accepts.
-    const group = screen.getByLabelText(`${en.modelReasoningEfforts} 1`)
-    const level = (name: string) => within(group).getByLabelText<HTMLInputElement>(name)
-    expect(level('High').checked).toBe(false)
-
-    fireEvent.click(level('Low'))
-    fireEvent.click(level('High'))
-    fireEvent.click(level('Max'))
-    fireEvent.click(buttonNamed(en.apply))
-
-    await waitFor(() => { expect(mutate).toHaveBeenCalled() })
-    // Each level stores the spelling dispatch sends, not a client vocabulary.
-    expect(firstMutate(mutate).ops[0]?.value).toEqual([{
-      id: 'acme-think',
-      reasoningEfforts: { low: 'low', high: 'high', max: 'max' },
-    }])
-  })
-
-  it('stores `off` as the level whose absence means not thinking', async () => {
-    const { mutate } = await mountSection({
-      providers: { openai: { models: [{ id: 'acme-think' }] } },
-    })
-    openEditor('openai')
-    expandModel(1)
-
-    const group = screen.getByLabelText(`${en.modelReasoningEfforts} 1`)
-    fireEvent.click(within(group).getByLabelText('Off'))
-    fireEvent.click(buttonNamed(en.apply))
-
-    await waitFor(() => { expect(mutate).toHaveBeenCalled() })
-    // A null value, which is how "do not think" travels: the reasoning
-    // parameter is absent rather than set to a spelling.
-    expect(firstMutate(mutate).ops[0]?.value).toEqual([{
-      id: 'acme-think',
-      reasoningEfforts: { off: null },
-    }])
-  })
-
-  it('pins a model as non-reasoning instead of leaving an empty declaration', async () => {
-    const { mutate } = await mountSection({
-      providers: { openai: { models: [{ id: 'acme-plain' }] } },
-    })
-    openEditor('openai')
-    expandModel(1)
-
-    const group = screen.getByLabelText(`${en.modelReasoningEfforts} 1`)
-    fireEvent.click(within(group).getByLabelText(en.modelNoReasoning))
-    fireEvent.click(buttonNamed(en.apply))
-
-    await waitFor(() => { expect(mutate).toHaveBeenCalled() })
-    // `false`, not `{}`: an empty dict declares nothing, which the adapter
-    // refuses as neither inheritance nor a non-reasoning model.
-    expect(firstMutate(mutate).ops[0]?.value).toEqual([{
-      id: 'acme-plain',
-      reasoningEfforts: false,
-    }])
-  })
-
-  it('refuses a model declaring no level and no non-reasoning marker', async () => {
-    const { mutate } = await mountSection({
-      providers: { openai: { models: [{ id: 'acme-empty', reasoningEfforts: {} }] } },
-    })
-    openEditor('openai')
-
-    expect(screen.getByText(`${en.model} 1: ${en.modelReasoningEffortsEmpty}`)).toBeTruthy()
-    expect(buttonNamed(en.apply).disabled).toBe(true)
-    expect(mutate).not.toHaveBeenCalled()
   })
 
   it('closes the picker without adopting anything on cancel', async () => {
@@ -944,7 +872,7 @@ describe('hand-declared providers', () => {
       <CustomProviderCard
         taken={['openai']}
         protocols={PROTOCOLS}
-        reasoningLevels={REASONING_LEVELS}
+        reasoningLevels={LEVELS}
         revision={7}
         operations={operationsWith(scripted.face)}
         t={t}
@@ -1162,6 +1090,28 @@ describe('hand-declared providers', () => {
     openEditor('acme-gateway')
 
     expect(screen.getByLabelText<HTMLSelectElement>(en.customApi).value).toBe('')
+  })
+
+  it.each([
+    ['blocks a hand-declared route', true],
+    ['leaves a catalog route to the adapter', false],
+  ])('%s whose stored reasoning levels the adapter refuses', async (_label, declared) => {
+    // Only a hand-declared route's rows edit reasoning levels, so only there
+    // can the card name the row and offer the switch that repairs it.
+    await mountSection({
+      providers: {
+        'acme-gateway': {
+          api: 'openai-completions',
+          models: [{ id: 'acme-large', reasoningEfforts: { off: null } }],
+        },
+      },
+      declaredRoutes: declared ? ['acme-gateway'] : [],
+    })
+    openEditor('acme-gateway')
+
+    const refusal = `${en.model} 1: ${en.modelReasoningNeedsLevel}`
+    expect(screen.queryByText(refusal) !== null).toBe(declared)
+    expect(buttonNamed(en.apply).disabled).toBe(declared)
   })
 
   it('retries only the key after the profile landed, and reports the provider on cancel', async () => {

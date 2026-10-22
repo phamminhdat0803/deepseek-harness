@@ -9,7 +9,7 @@
 
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {
-  CredentialInfo, LlmConfigurableProvider, LlmProviderInfo, SettingsNamespaceView,
+  CredentialInfo, LlmConfigurableProvider, LlmNativeAuth, LlmProviderInfo, SettingsNamespaceView,
 } from '@deepseek-ai/dsh-api-remotes/client'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
@@ -22,19 +22,6 @@ import type { SettingsSchemaOperations } from './schema-operations.ts'
  */
 const PROBE_ROUTE = '\u0000probe'
 
-/**
- * One level a model's `reasoningEfforts` may declare, paired with the wire
- * spelling a checkbox writes for it. The level is pi-ai's vocabulary, which
- * the schema owns; the spelling is what an OpenAI-compatible endpoint reads
- * for that level, and stays identical to the level name where both agree.
- */
-export interface ReasoningEffortLevelChoice {
-  /** pi-ai thinking level this declaration selects. */
-  level: string
-  /** Wire spelling dispatch sends, or `null` for `off`, which sends nothing. */
-  wire: string | null
-}
-
 /** One provider row after joining the configurable directory with live routes. */
 export interface ProviderDirectoryEntry {
   readonly provider: string
@@ -43,6 +30,9 @@ export interface ProviderDirectoryEntry {
   readonly settingsPath: readonly string[]
   readonly active: boolean
   readonly declared?: boolean
+  readonly defaultBaseURL?: string
+  readonly baseURLEnv?: readonly string[]
+  readonly nativeAuth?: LlmNativeAuth
   readonly error?: string
 }
 
@@ -65,6 +55,9 @@ export function joinProviderDirectory(
     settingsPath: [...entry.settingsPath],
     active: active.has(entry.provider),
     ...entry.declared === undefined ? {} : { declared: entry.declared },
+    ...entry.defaultBaseURL === undefined ? {} : { defaultBaseURL: entry.defaultBaseURL },
+    ...entry.baseURLEnv === undefined ? {} : { baseURLEnv: entry.baseURLEnv },
+    ...entry.nativeAuth === undefined ? {} : { nativeAuth: entry.nativeAuth },
     ...entry.error === undefined ? {} : { error: entry.error },
   }))
   for (const provider of registered) {
@@ -103,6 +96,8 @@ export interface ProviderRow {
    * own derivation rule.
    */
   derivedCredential?: CredentialInfo
+  /** Redacted checks for named or native references; absent when their read failed. */
+  credentialChecks?: Readonly<Record<string, CredentialInfo>>
 }
 
 /** Page snapshot. */
@@ -152,47 +147,25 @@ export function protocolChoices(
 }
 
 /**
- * Wire spellings for the levels a `models` entry may declare, read out of the
- * owning namespace's own schema. A schema read rather than a client-owned list
- * so the levels this page offers cannot drift from the ones the adapter
- * accepts, for the same reason {@link protocolChoices} reads protocols.
- *
- * The value a level is declared with is the spelling dispatch sends, which
- * pi-ai forwards to an OpenAI-compatible endpoint as `reasoning_effort`. That
- * endpoint's vocabulary is the deployment's, not this page's: the standard
- * `reasoning_effort` levels share their spelling with pi-ai's level names, so
- * writing the level name is correct wherever the gateway uses the standard
- * field, and a gateway with its own vocabulary is a `cordis.patch.yml` edit.
- * `off` is the one level that writes no value at all — the parameter's absence
- * is how "do not think" travels — so it is the sole null here.
- *
- * A namespace whose models declare no such field (the DeepSeek family, whose
- * effort is a provider-level default) yields an empty list, which hides the
- * control rather than offering levels the schema cannot accept.
+ * The reasoning levels a hand-declared route's models may declare, read out of
+ * the owning namespace's own schema for the same reason as
+ * {@link protocolChoices}: the levels the page offers and the keys the
+ * adapter accepts in `reasoningEfforts` come from the same `Config`.
  * @param namespace - the namespace view whose schema declares the profile shape.
  * @param schema - settings schema operations.
- * @returns the levels in the schema's own escalation order, or an empty list.
+ * @returns the levels in the schema's escalation order, or an empty list when the schema has none.
  */
-export function reasoningEffortLevels(
+export function reasoningLevelChoices(
   namespace: SettingsNamespaceView | undefined,
   schema: SettingsSchemaOperations,
-): readonly ReasoningEffortLevelChoice[] {
+): string[] {
   if (namespace === undefined) return []
-  const node = schema.nodeAtPath(schema.rehydrate(namespace.schema), [
-    'providers', PROBE_ROUTE, 'models', 'inner', 'reasoningEfforts',
-  ])
-  // `reasoningEfforts` is a union of the `false` arm and the dict; only the
-  // dict arm carries the levels, in its key union's own order.
-  const union = (node as { type?: string; list?: readonly unknown[] } | undefined)
-  if (union?.type !== 'union' || union.list === undefined) return []
-  const keys = (union.list as readonly { type?: string; sKey?: { list?: readonly { value?: unknown }[] } }[])
-    .find(arm => arm.type === 'dict')?.sKey?.list
-  if (keys === undefined) return []
-  return keys.flatMap((entry) => {
-    const level = entry.value
-    if (typeof level !== 'string') return []
-    return [{ level, wire: level === 'off' ? null : level }]
-  })
+  const path = ['providers', PROBE_ROUTE, 'models', '0', 'reasoningEfforts']
+  const node = schema.nodeAtPath(schema.rehydrate(namespace.schema), path)
+  // `false | { [level]: value }`: the dict branch's key schema lists the levels.
+  const branches = (node as { list?: readonly { type?: string; sKey?: unknown }[] } | undefined)?.list ?? []
+  const keys = branches.find(branch => branch.type === 'dict')?.sKey as { list?: readonly { value?: unknown }[] } | undefined
+  return (keys?.list ?? []).map(entry => entry.value).filter((value): value is string => typeof value === 'string')
 }
 
 /** The credential reference a resolved profile names (its `apiKeyEnv` field). */
@@ -266,7 +239,9 @@ export class ModelsSettingsStore {
     if (!declared.ok) { this.failLoad(declared.error.message); return }
     const mirrored = this.describeFace.getSnapshot()
     if (mirrored.view === undefined) {
-      this.failLoad(mirrored.error ?? 'settings are unavailable in this browser')
+      /* v8 ignore next -- SettingsDescribeFace.ensure settles with a view or the read's error */
+      if (mirrored.error === null) throw new Error('settings describe settled with neither a view nor an error')
+      this.failLoad(mirrored.error)
       return
     }
     const providers = joinProviderDirectory(registered.value, declared.value)
@@ -296,16 +271,18 @@ export class ModelsSettingsStore {
           && catalog.value.groups.some(group => group.id === 'deepseek-account' && group.models.length > 0)
       }
     }
-    const refs = [...new Set(rows.filter(row => row.entry.provider !== 'deepseek-account').map(row => row.apiKeyEnv ?? deriveKeyRef(row.entry.provider)))]
-    let credentials: Record<string, CredentialInfo> = {}
+    const refs = [...new Set(rows.filter(row => row.entry.provider !== 'deepseek-account').flatMap(row =>
+      row.apiKeyEnv === undefined ? [deriveKeyRef(row.entry.provider), ...row.entry.nativeAuth?.env ?? []] : [row.apiKeyEnv]))]
+    const credentials: Record<string, CredentialInfo> = {}
     let credentialError: string | null = null
-    if (refs.length > 0) {
-      const response = await this.ctx.remote.credentials.describe(refs)
+    // credentials.describe accepts at most 64 references per request.
+    for (let index = 0; index < refs.length; index += 64) {
+      const response = await this.ctx.remote.credentials.describe(refs.slice(index, index + 64))
       // Credential state is an enrichment for the Models page: a failure
       // degrades the badge instead of failing the load. The onboarding
       // projection below retains the failure distinction.
-      if (response.ok) credentials = response.value
-      else credentialError = response.error.message
+      if (response.ok) Object.assign(credentials, response.value)
+      else { credentialError = response.error.message; break }
     }
     if (generation !== this.generation) return
     this.store.update((s) => {
@@ -321,6 +298,13 @@ export class ModelsSettingsStore {
           ...row,
           ...named === undefined ? {} : { credential: named },
           ...derived === undefined ? {} : { derivedCredential: derived },
+          ...credentialError === null ? { credentialChecks: Object.fromEntries(
+            (row.apiKeyEnv === undefined ? row.entry.nativeAuth?.env ?? [] : [row.apiKeyEnv])
+              .flatMap((ref) => {
+                const info = credentials[ref]
+                return info === undefined ? [] : [[ref, info] as const]
+              }),
+          ) } : {},
         }
       })
       s.namespaces = namespaces
